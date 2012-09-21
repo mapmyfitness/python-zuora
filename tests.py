@@ -22,9 +22,14 @@ class MockZuoraResponseObject(object):
 
 
 class TestZuora(object):
+    
+    def setup_method(self, method):
+        self.zuora_settings = {'username': mock.Mock(),
+                               'password': mock.Mock(),
+                               'wsdl_file': 'zuora.a.39.0.dev.wsdl'}
 
     def test_create_product_ammendment_create_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.client = mock.Mock()
         z.create = mock.Mock()
         response = mock.Mock()
@@ -37,7 +42,7 @@ class TestZuora(object):
         assert z.create.call_count == 1
     
     def test_update_product_ammendment_update_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.client = mock.Mock()
         z.update = mock.Mock()
         response = mock.Mock()
@@ -48,7 +53,7 @@ class TestZuora(object):
         assert z.update.call_count == 1
     
     def test_add_product_ammendment_create_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.client = mock.Mock()
         z.create = mock.Mock()
         z.create_product_amendment = mock.Mock()
@@ -63,7 +68,7 @@ class TestZuora(object):
         assert z.create.call_count == 1
     
     def test_cancel_subscription_update_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.create_product_amendment = mock.Mock()
         z.update_product_amendment = mock.Mock()
         z.cancel_subscription(subscription_id=mock.Mock())
@@ -71,7 +76,7 @@ class TestZuora(object):
         assert z.update_product_amendment.call_count == 1
     
     def test_create_active_account_get_payment_method_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.client = mock.Mock()
         z.get_payment_method = mock.Mock()
         z.update = mock.Mock()
@@ -85,7 +90,7 @@ class TestZuora(object):
         assert z.update.call_count == 1
     
     def test_get_account_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -94,7 +99,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_contact_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -103,7 +108,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_invoice_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -112,7 +117,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_invoice_pdf_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         zInvoice = mock.Mock()
@@ -123,7 +128,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_invoices_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -132,7 +137,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_invoice_items_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -142,7 +147,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_invoice_payment_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -151,7 +156,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_invoice_payments_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -161,7 +166,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_payment_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -170,7 +175,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_payments_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -179,7 +184,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_payment_method_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -188,7 +193,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_payment_methods_get_payment_method_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         zAccount = mock.Mock()
@@ -199,7 +204,7 @@ class TestZuora(object):
         assert z.query.call_count == 2
     
     def test_get_payment_methods_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -210,7 +215,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_products_product_id(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -219,7 +224,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_products_shortcodes(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -228,7 +233,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_product_rate_plans_product_rate_plan_id(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -237,7 +242,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_product_rate_plans_product_id_list(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -248,7 +253,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_product_rate_plan_charges_product_rate_plan_id(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -257,7 +262,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_product_rate_plan_charges_product_rate_plan_id_list(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -268,7 +273,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_product_rate_plan_charge_tiers_product_rate_plan_charge_id(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -278,7 +283,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_product_rate_plan_charge_tiers_product_rate_plan_charge_id_list(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -289,7 +294,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_match_product_rate_plans(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.get_camel_converted_products = mock.Mock()
         z.get_camel_converted_product_rate_plans = mock.Mock()
         z.get_camel_converted_product_rate_plan_charges = mock.Mock()
@@ -306,7 +311,7 @@ class TestZuora(object):
                                                                         == 1
 
     def test_get_product_rate_plan_charge_pricing(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         product_rate_plan_id = 'df2423dffgf'
         z.get_camel_converted_product_rate_plan_charges = mock.Mock()
         z.get_camel_converted_product_rate_plan_charge_tiers = mock.Mock()
@@ -320,7 +325,7 @@ class TestZuora(object):
                                                                         == 1
 
     def test_get_rate_plans_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -330,7 +335,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_get_subscriptions_query_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
         response = mock.Mock()
         response.records = [1]
@@ -344,7 +349,7 @@ class TestZuora(object):
         assert z.query.call_count == 1
     
     def test_remove_product_amendment_create_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.client = mock.Mock()
         z.create_product_amendment = mock.Mock()
         z.update_product_amendment = mock.Mock()
@@ -359,7 +364,7 @@ class TestZuora(object):
         assert z.create.call_count == 1
     
     def test_subscribe_call_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.client = mock.Mock()
         z.make_account = mock.Mock()
         z.make_contact = mock.Mock()
@@ -388,7 +393,7 @@ class TestZuora(object):
         assert z.call.call_count == 1
 
     def test_update_account_update_called(self):
-        z = Zuora()
+        z = Zuora(self.zuora_settings)
         z.client = mock.Mock()
         z.update = mock.Mock()
         response = mock.Mock()
