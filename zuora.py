@@ -11,8 +11,6 @@ from suds.client import Client
 from suds.sax.element import Element
 from suds.xsd.doctor import Import, ImportDoctor
 
-import settings
-
 import logging
 log = logging.getLogger(__name__)
 
@@ -30,21 +28,6 @@ class ZuoraException(Exception):
         return "%s" % (self.value,)
 
 
-# constants
-try:
-    # This is dynamically loaded so not available in env
-    ZUORA_SETTINGS = settings.ZUORA_SETTINGS  # @UndefinedVariable
-except:
-    ZUORA_SETTINGS = {
-                'username': 'kevin@mapmyfitness.com',
-                'password': 'zuora123!', 'wsdl_file': 'zuora.a.39.0.wsdl',
-                }
-ZUORA_USERNAME = ZUORA_SETTINGS["username"]
-ZUORA_PASSWORD = ZUORA_SETTINGS["password"]
-ZUORA_WSDL_FILE = ZUORA_SETTINGS["wsdl_file"]
-ZUORA_BASE_DIR = path.dirname(__file__)
-
-
 # main class
 class Zuora:
       
@@ -57,7 +40,12 @@ class Zuora:
     #: SessionID (TODO: put this into memcache)
     session_id = None
     
-    def __init__(self):
+    def __init__(self, zuora_settings):
+        # Assign settings
+        self.username = zuora_settings["username"]
+        self.password = zuora_settings["password"]
+        self.wsdl_file = zuora_settings["wsdl_file"]
+        self.base_dir = path.dirname(__file__)
         
         # Build Client
         imp = Import('http://object.api.zuora.com/')
@@ -66,7 +54,7 @@ class Zuora:
         schema_doctor = ImportDoctor(imp)
         
         wsdl_file = 'file://%s' % path.abspath(
-                                    ZUORA_BASE_DIR + "/" + ZUORA_WSDL_FILE)
+                                    self.base_dir + "/" + self.wsdl_file)
         
         self.client = Client(url=wsdl_file, doctor=schema_doctor,
                              cache=None)
@@ -150,8 +138,8 @@ class Zuora:
         TODO: investigate methodology to persist session_id across sessions
         - look at custom capabilities -- sqlalchemy caching - WEB-935 perhaps
         """
-        login_response = self.client.service.login(username=ZUORA_USERNAME,
-                                                   password=ZUORA_PASSWORD)
+        login_response = self.client.service.login(username=self.username,
+                                                   password=self.password)
         self.session_id = login_response.Session
 
         # Define Session Namespace
