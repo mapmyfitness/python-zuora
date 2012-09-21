@@ -1,0 +1,2 @@
+# Zuora (Subscriptions) dependencies
+-e git+https://github.com/kevincal/suds-patched@f9869d36fac3077da3b1351eb169518bbdd92ac3#egg=suds-dev
