@@ -345,30 +345,18 @@ class Zuora:
         """
         Checks to see if the loaded user has an account
         """
-        account_number = "A-%s" % user_id
-        zAccount = self._get_account(account_number)
-        # Try to retrieve the account if it was a USAEPAY migrated account
-        # (which doesn't have A- prepended)
-        if not zAccount:
-            zAccount = self._get_account(user_id)
-        # If the account still couldn't be found
-        if not zAccount:
-            raise ZuoraException("Unable to find Account for User ID %s"\
-                            % user_id)
-        return zAccount
-    
-    def _get_account(self, account_number):
-        # Search for Matching Account
         qs = """
             SELECT Id FROM Account
-            WHERE AccountNumber = '%s'
-            """
-        
-        response = self.query(qs % account_number)
+            WHERE AccountNumber = '%s' or AccountNumber = 'A-%s'
+            """ % (user_id, user_id)
+
+        response = self.query(qs)
         if getattr(response, "records") and len(response.records) > 0:
             zAccount = response.records[0]
             return zAccount
-        return None
+        else:
+            raise ZuoraException("Unable to find Account for User ID %s"\
+                            % user_id)
 
     def get_contact(self, email, account_id=None):
         """

@@ -5,7 +5,7 @@ setupArgs = {
     'version': '1.0',
     'author': 'MapMyFitness',
     'author_email': 'brandon.fredericks@mapmyfitness.com',
-    'url': 'ssh://git@git.mapmyfitness.com/suez',
+    'url': 'http://github.com/mapmyfitness/python-zuora',
     'description': 'Zuora client library.',
     'packages': ['zuora'],
 }
