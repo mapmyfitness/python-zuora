@@ -46,6 +46,8 @@ class Zuora:
         self.password = zuora_settings["password"]
         self.wsdl_file = zuora_settings["wsdl_file"]
         self.base_dir = path.dirname(__file__)
+        self.authorize_gateway = zuora_settings.get("gateway_name", None)
+        self.create_test_users = zuora_settings.get("test_users", None)
         
         # Build Client
         imp = Import('http://object.api.zuora.com/')
@@ -1320,6 +1322,13 @@ class Zuora:
                                           user["first_name"])
         zAccount.PaymentTerm = 'Due Upon Receipt'
         zAccount.Status = status
+        
+        # Determine which Payment Gateway to use, if specified
+        if self.authorize_gateway:
+            zAccount.PaymentGateway = self.authorize_gateway
+        
+        if self.create_test_users:
+            zAccount.Test_Account__c = 1
         
         response = self.create(zAccount)
         if not isinstance(response, list) or not response[0].Success:
