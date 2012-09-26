@@ -34,7 +34,7 @@ else:
     setupArgs.update({
         'tests_require': ['pytest'],
         'cmdclass': {'test': TestRunner},
-        'install_requires': ['suds >= 0.4'],
+        #'install_requires': ['suds >= 0.4'], Worrying about getting dependency chain right later
         'zip_safe': False,
     })
 
