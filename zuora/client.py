@@ -772,6 +772,8 @@ class Zuora:
         :param str product_id: ProductID
         :param list shortcodes: List of shortcode strings
         """
+        qs_filter = None
+        
         qs = """
             SELECT
                 Description, EffectiveEndDate, EffectiveStartDate,
@@ -787,8 +789,9 @@ class Zuora:
             qs_filter_list = ["ShortCode__c = '%s'" % code
                                 for code in shortcodes]
             qs_filter = " OR ".join(qs_filter_list)
-            
-        qs += " WHERE %s" % qs_filter
+        
+        if qs_filter:
+            qs += " WHERE %s" % qs_filter
             
         response = self.query(qs)
         try:
