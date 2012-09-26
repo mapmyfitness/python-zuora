@@ -1,6 +1,20 @@
 """
     Zuora Interface Module
     ~~~~~~~~~~~~~~~~~~~~~~
+    
+    Current WSDL files are based on Zuora WSDL 39.
+    
+    Accounts for our Zuora setup are fetch by either A-user_id (i.e. A-32432)
+    or just by the user id (look at the get_account WHERE clause).
+    
+    We also use custom fields in some of our queries: CustomField__c that
+    could break for people who don't use our custom fields (i.e. ShortCode__c)
+    
+    Usage example:
+    import zuora
+    
+    z = zuora.Zuora(SETTINGS)
+    account = z.get_account(23432)
 """
 from datetime import datetime, date
 from os import path
@@ -41,6 +55,23 @@ class Zuora:
     session_id = None
     
     def __init__(self, zuora_settings):
+        """
+        Usage example:
+        
+        Required dictionary settings for zuora client:
+        
+        username : str : username for logging into Zuora
+        password : str : password for logging into Zuora
+        wsdl_file : str : path to local wsdl file used for suds library
+        
+        Optional dictionary settings:
+        
+        gateway_name : str : The name of the gateway used for payment
+                             authorization
+        test_users : str : Used if you only desire to create test user
+                           accounts. Adds the custom field Test_Account__c
+                           to all created users.
+        """
         # Assign settings
         self.username = zuora_settings["username"]
         self.password = zuora_settings["password"]
