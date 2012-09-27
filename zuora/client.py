@@ -1246,12 +1246,15 @@ class Zuora:
         # Return the Match
         return zRecords
     
-    def get_subscriptions(self, account_id=None, auto_renew=None,
-                          status=None, term_type=None,
-                          term_end_date=None, term_start_date=None):
+    def get_subscriptions(self, subscription_id=None, account_id=None,
+                          auto_renew=None, status=None, term_type=None,
+                          term_end_date=None, term_start_date=None,
+                          subscription_number=None):
         """
         Gets the Subscriptions matching criteria.
         
+        :optparam str subscription_id: Subscription ID
+        :optparam str subscription_number: Unique Subscription number
         :optparam str account_id: Account ID
         :optparam bool auto_renew: AutoRenew (True, False)
         :optparam str status: Subscription Status. Allowable values: Draft,
@@ -1263,6 +1266,12 @@ class Zuora:
         
         # Defaults
         qs_filter = []
+        
+        if subscription_id:
+            qs_filter.append("Id = '%s'" % subscription_id)
+        
+        if subscription_number:
+            qs_filter.append("Name = '%s'" % subscription_number)
         
         if account_id:
             qs_filter.append("AccountId = '%s'" % account_id)
