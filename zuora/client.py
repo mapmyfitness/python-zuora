@@ -1316,7 +1316,7 @@ class Zuora:
         # Return the Match
         return zRecords
 
-    def make_account(self, user=None, currency='USD', status="Draft"):
+    def make_account(self, user=None, currency='USD', status="Draft", lazy=False):
         """
         The customer's account. Zuora uses the Account object to track all
         subscriptions, usage, and transactions for a single account to be
@@ -1361,6 +1361,9 @@ class Zuora:
         if self.create_test_users:
             zAccount.Test_Account__c = 1
 
+        if lazy:
+            return zAccount
+
         response = self.create(zAccount)
         if not isinstance(response, list) or not response[0].Success:
             raise ZuoraException(
@@ -1370,7 +1373,8 @@ class Zuora:
         # Return
         return zAccount
 
-    def make_contact(self, user=None, billing_address=None, zAccount=None):
+    def make_contact(self, user=None, billing_address=None, zAccount=None,
+        lazy=False):
         """
         This defines the contact (the end user) for the account. There are two
         types of contacts that need to be created as part of the customer
@@ -1395,25 +1399,32 @@ class Zuora:
         # Check User / Billing Address
         if not user:
             raise ZuoraException("No User Selected.")
-        elif not billing_address:
-            raise ZuoraException("No Billing Address Selected.")
-        elif not zAccount:
-            raise ZuoraException("No Existing Account.")
 
         # Build Contact
         # TODO: remove ns2
         zContact = self.client.factory.create('ns2:Contact')
-        zContact.FirstName = billing_address["first_name"]
-        zContact.LastName = billing_address["last_name"]
-        zContact.Address1 = billing_address["street_1"]
-        zContact.Address2 = billing_address.get("street_2")
-        zContact.City = billing_address["city"]
-        zContact.State = billing_address.get("state")
-        zContact.PostalCode = billing_address.get("postal_code")
-        zContact.Country = billing_address["country_code"]
+
+        if billing_address is not None:
+            zContact.FirstName = billing_address["first_name"]
+            zContact.LastName = billing_address["last_name"]
+            zContact.Address1 = billing_address["street_1"]
+            zContact.Address2 = billing_address.get("street_2")
+            zContact.City = billing_address["city"]
+            zContact.State = billing_address.get("state")
+            zContact.PostalCode = billing_address.get("postal_code")
+            zContact.Country = billing_address["country_code"]
+        else:
+            zContact.FirstName = user['first_name']
+            zContact.LastName = user['last_name']
+
         zContact.PersonalEmail = user["email"]
 
-        zContact.AccountId = zAccount.Id
+        if zAccount is not None and hasattr(zAccount, 'Id'):
+            zContact.AccountId = zAccount.Id
+
+        if lazy:
+            return zContact
+
         response = self.create(zContact)
         if not isinstance(response, list) or not response[0].Success:
             raise ZuoraException(
@@ -1481,7 +1492,7 @@ class Zuora:
 
         zSubscription.InitialTerm = monthly_term
         # Set RenewalTerm to value explicit value if not None (can be 0)
-        if renewal_term != None:
+        if renewal_term is not None:
             zSubscription.RenewalTerm = renewal_term
         # Default to monthly term
         else:
@@ -1597,10 +1608,6 @@ class Zuora:
         zSubscribeRequest.SubscriptionData = zSubscriptionData
         zSubscribeRequest.SubscribeOptions = zSubscriptionOptions
 
-        # Create Payment Method if it doesn't exist
-        if not payment_method:
-            raise ZuoraException(
-                "No payment method for Account: %s" % zAccount.Id)
         zSubscribeRequest.PaymentMethod = payment_method
 
         # If Preview
