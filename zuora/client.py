@@ -800,6 +800,57 @@ class Zuora:
         except:
             raise ZuoraException("Unable to find Product for %s"\
                             % product_id)
+        
+    def get_rate_plan_charges(self, rate_plan_id=None,
+                                    rate_plan_id_list=None):
+        """
+        Gets the Rate Plan Charges
+        
+        :param str rate_plan_id: RatePlanID
+        :param list rate_plan_id_list: list of RatePlanID's
+        """
+        qs = """
+            SELECT
+                AccountingCode, ApplyDiscountTo,
+                BillCycleDay, BillCycleType,
+                BillingPeriodAlignment, ChargedThroughDate,
+                ChargeModel, ChargeNumber, ChargeType, CreatedById,
+                DefaultQuantity, CreatedDate, Description,
+                DiscountAmount, DiscountLevel, DiscountPercentage,
+                DMRC, DTCV, EffectiveEndDate, EffectiveStartDate,
+                IncludedUnits, IsLastSegment, MRR, Name, NumberOfPeriod,
+                OriginalId, OverageCalculationOption, OveragePrice,
+                OverageUnusedUnitsCreditOption, Price,
+                PriceIncreasePercentage, ProcessedThroughDate,
+                ProductRatePlanChargeId, Quantity, RatePlanId,
+                RolloverBalance, Segment, TCV, TriggerDate, TriggerEvent,
+                UnusedUnitsCreditRates, UOM, UpdatedById, UpdatedDate,
+                UpToPeriods, UsageRecordRatingOption, 
+                UseDiscountSpecificAccountingCode, Version
+            FROM RatePlanCharge
+            """
+        where_id_string = "RatePlanId = '%s'"
+        # If only querying with one rate plan id
+        if rate_plan_id:
+            qs_filter = where_id_string % rate_plan_id
+        # Otherwise we're querying with multiple rate plan id's
+        else:
+            qs_filter = None
+            if rate_plan_id_list:
+                id_filter_list = [where_id_string % rp_id \
+                          for rp_id in rate_plan_id_list]
+                # Combine the rate plan ids for the WHERE clause
+                qs_filter = " OR ".join(id_filter_list)
+        
+        qs += " WHERE %s" % qs_filter
+        
+        response = self.query(qs)
+        try:
+            return response.records
+        except:
+            raise ZuoraException(
+                            "Unable to find Rate Plan Charges for %s"\
+                            % rate_plan_id)
             
     def get_product_rate_plans(self, product_rate_plan_id=None,
                                product_id_list=None, effective_start=None,
@@ -858,7 +909,8 @@ class Zuora:
                             % product_rate_plan_id)
 
     def get_product_rate_plan_charges(self, product_rate_plan_id=None,
-                                      product_rate_plan_id_list=None):
+                                      product_rate_plan_id_list=None,
+                                      product_rate_plan_charge_id=None):
         """
         Gets the Product Rate Plan Charges.
         
@@ -882,9 +934,12 @@ class Zuora:
             FROM ProductRatePlanCharge
             """
         where_id_string = "ProductRatePlanId = '%s'"
-        # If only one product is requested
+        # If only querying with one product rate plan id
         if product_rate_plan_id:
             qs_filter = where_id_string % product_rate_plan_id
+        # if we are pulling a product rate plan charge based on its id
+        elif product_rate_plan_charge_id:
+            qs_filter = "Id = '%s'" % product_rate_plan_charge_id
         # Otherwise multiple products are being requested
         else:
             qs_filter = None
@@ -898,8 +953,7 @@ class Zuora:
         
         response = self.query(qs)
         try:
-            zProductRatePlanCharges = response.records
-            return zProductRatePlanCharges
+            return response.records
         except:
             raise ZuoraException(
                             "Unable to find Product Rate Plan Charges for %s"\
@@ -1675,3 +1729,13 @@ def zuora_serialize(obj):
             else:
                 obj_dict[key] = zuora_serialize(attr[1])
         return obj_dict
+
+def zuora_serialize_list(response_list):
+    """
+    Serialize a list of Zuora objects
+    """
+    serialized_list = []
+    if response_list:
+        for item in response_list:
+            serialized_list.append(zuora_serialize(item))
+    return serialized_list
