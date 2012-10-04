@@ -1576,7 +1576,7 @@ class Zuora:
         if not zAccount:
             zAccount = self.make_account(user=user)
 
-        if not zContact:
+        if not zContact and not zAccount.Id:
             # Create Contact
             zContact = self.make_contact(user=user,
                                          billing_address=billing_address,
