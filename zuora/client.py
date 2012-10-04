@@ -802,33 +802,37 @@ class Zuora:
                             % product_id)
         
     def get_rate_plan_charges(self, rate_plan_id=None,
-                                    rate_plan_id_list=None):
+                                    rate_plan_id_list=None,
+                                    pricing_info="Price"):
         """
         Gets the Rate Plan Charges
         
         :param str rate_plan_id: RatePlanID
         :param list rate_plan_id_list: list of RatePlanID's
         """
+        # Note: Can only use OveragePrice or Price or IncludedUnits or
+        # DiscountAmount or DiscountPercentage in one query
+        # Note: No clue what that means, but that's the error I get from Zuora
+        # if I try to include them all.
         qs = """
             SELECT
                 AccountingCode, ApplyDiscountTo,
                 BillCycleDay, BillCycleType,
                 BillingPeriodAlignment, ChargedThroughDate,
                 ChargeModel, ChargeNumber, ChargeType, CreatedById,
-                DefaultQuantity, CreatedDate, Description,
-                DiscountAmount, DiscountLevel, DiscountPercentage,
+                CreatedDate, Description, DiscountLevel,
                 DMRC, DTCV, EffectiveEndDate, EffectiveStartDate,
-                IncludedUnits, IsLastSegment, MRR, Name, NumberOfPeriod,
-                OriginalId, OverageCalculationOption, OveragePrice,
-                OverageUnusedUnitsCreditOption, Price,
+                IsLastSegment, MRR, Name, NumberOfPeriods,
+                OriginalId, OverageCalculationOption,
+                OverageUnusedUnitsCreditOption, %s,
                 PriceIncreasePercentage, ProcessedThroughDate,
                 ProductRatePlanChargeId, Quantity, RatePlanId,
-                RolloverBalance, Segment, TCV, TriggerDate, TriggerEvent,
+                Segment, TCV, TriggerDate, TriggerEvent,
                 UnusedUnitsCreditRates, UOM, UpdatedById, UpdatedDate,
                 UpToPeriods, UsageRecordRatingOption, 
                 UseDiscountSpecificAccountingCode, Version
             FROM RatePlanCharge
-            """
+            """ % pricing_info
         where_id_string = "RatePlanId = '%s'"
         # If only querying with one rate plan id
         if rate_plan_id:
@@ -1705,7 +1709,7 @@ def zuora_serialize(obj):
     - Very primative serializer but is able to handle
       the basic Zuora SOAP Objects.
     """
-    basic_serializer = [str, int, float, unicode, date, datetime]
+    basic_serializer = [str, int, float, unicode, date, datetime, long]
     
     if not obj:
         return None
