@@ -1458,7 +1458,8 @@ class Zuora:
 
     def make_subscription(self, monthly_term, name=None, notes=None,
                           recurring=True, term_type="TERMED",
-                          renewal_term=None, order_id=None):
+                          renewal_term=None, order_id=None,
+                          start_date=None):
         """
         This object contains the information needed to create a new
         subscription for the account. It is part of the entire subscribe
@@ -1478,6 +1479,8 @@ class Zuora:
         """
 
         effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        if start_date is None:
+            start_date = effective_date
 
         zSubscription = self.client.factory.create('ns2:Subscription')
         if name:
@@ -1487,8 +1490,8 @@ class Zuora:
 
         zSubscription.ContractAcceptanceDate = effective_date
         zSubscription.ContractEffectiveDate = effective_date
-        zSubscription.ServiceActivationDate = effective_date
-        zSubscription.TermStartDate = effective_date
+        zSubscription.ServiceActivationDate = start_date
+        zSubscription.TermStartDate = start_date
 
         zSubscription.InitialTerm = monthly_term
         # Set RenewalTerm to value explicit value if not None (can be 0)
@@ -1549,7 +1552,7 @@ class Zuora:
                   term_type="TERMED", renewal_term=None,
                   account_name=None, subscription_name=None,
                   recurring=True, payment_method=None, order_id=None,
-                  user=None, billing_address=None):
+                  user=None, billing_address=None, start_date=None):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
@@ -1588,7 +1591,8 @@ class Zuora:
         # Create Subscription
         zSubscription = self.make_subscription(monthly_term=monthly_term,
                                                recurring=recurring,
-                                               order_id=order_id)
+                                               order_id=order_id,
+                                               start_date=start_date)
 
         # Attach additional Options
         zSubscriptionOptions = self.client.factory\
