@@ -231,6 +231,15 @@ class TestZuora(object):
         z.get_products(shortcodes=['sub_bronze', 'sub_gold'])
         assert z.query.call_count == 1
     
+    def test_get_rate_plan_charges_rate_plan_id(self):
+        z = Zuora(self.zuora_settings)
+        z.query = mock.Mock()
+        response = mock.Mock()
+        response.records = [1]
+        z.query.return_value = response
+        z.get_rate_plan_charges(rate_plan_id='df2423dffgf')
+        assert z.query.call_count == 1
+    
     def test_get_product_rate_plans_product_rate_plan_id(self):
         z = Zuora(self.zuora_settings)
         z.query = mock.Mock()
