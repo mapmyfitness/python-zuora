@@ -389,20 +389,29 @@ class Zuora:
             raise ZuoraException("Unable to find Account for User ID %s"\
                             % user_id)
 
-    def get_contact(self, email, account_id=None):
+    def get_contact(self, account_id=None, email=None):
         """
         Checks to see if the loaded user has a contact
         """
+        qs_filter = []
         
+        if account_id:
+            qs_filter.append("AccountId = '%s'" % account_id)
+        
+        if email:
+            qs_filter.append("PersonalEmail = '%s'" % email)
+         
         # Search for Matching Account
         qs = """
-            SELECT Id FROM Contact
-            WHERE PersonalEmail = '%s'
-            """ % email
-        
-        # Check if Contact Exists for Particular Account
-        if account_id:
-            qs = qs + " AND AccountId = '%s'" % account_id
+            SELECT
+                AccountId, Address1, Address2, City, Country, County,
+                CreatedById, CreatedDate, Description, Fax, FirstName,
+                HomePhone, Id, LastName, MobilePhone, NickName, OtherPhone,
+                OtherPhoneType, PersonalEmail, PostalCode, State, TaxRegion,
+                UpdatedById, UpdatedDate, WorkEmail, WorkPhone
+            FROM Contact
+            WHERE %s
+            """  % " AND ".join(qs_filter)
         
         response = self.query(qs)
         if getattr(response, "records") and len(response.records) > 0:
