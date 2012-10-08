@@ -41,6 +41,18 @@ class ZuoraException(Exception):
     def __str__(self):
         return "%s" % (self.value,)
 
+class DoesNotExist(ZuoraException):
+    """
+    Exception for when objects don't exist in Zuora
+    """
+    pass
+
+class MissingRequired(ZuoraException):
+    """
+    Exception for when a required parameter is missing
+    """
+    pass
+
 
 # main class
 class Zuora:
@@ -351,7 +363,7 @@ class Zuora:
         
         # Create Payment Method on Account
         if not payment_method_id:
-            raise ZuoraException(
+            raise MissingRequired(
                 "No payment method for Account: %s" % zAccount.Id)
         else:
             zPaymentMethod = self.get_payment_method(payment_method_id)
@@ -386,7 +398,7 @@ class Zuora:
             zAccount = response.records[0]
             return zAccount
         else:
-            raise ZuoraException("Unable to find Account for User ID %s"\
+            raise DoesNotExist("Unable to find Account for User ID %s"\
                             % user_id)
 
     def get_contact(self, account_id=None, email=None):
@@ -418,7 +430,7 @@ class Zuora:
             zContact = response.records[0]
             return zContact
         else:
-            raise ZuoraException("Unable to find Contact for Email %s"\
+            raise DoesNotExist("Unable to find Contact for Email %s"\
                             % email)
 
     def get_invoice(self, invoice_id=None):
@@ -444,7 +456,7 @@ class Zuora:
             zInvoice = response.records[0]
             return zInvoice
         else:
-            raise ZuoraException("Unable to find Invoice for Id %s"\
+            raise DoesNotExist("Unable to find Invoice for Id %s"\
                             % invoice_id)
 
     def get_invoice_pdf(self, invoice_id=None):
@@ -466,7 +478,7 @@ class Zuora:
             zInvoice = response.records[0]
             return zInvoice.Body
         else:
-            raise ZuoraException("Unable to find Invoice for Id %s"\
+            raise DoesNotExist("Unable to find Invoice for Id %s"\
                             % invoice_id)
 
     def get_invoices(self, account_id=None):
@@ -568,7 +580,7 @@ class Zuora:
             zInvoicePayment = response.records[0]
             return zInvoicePayment
         else:
-            raise ZuoraException("Unable to find InvoicePayment for Id %s"\
+            raise DoesNotExist("Unable to find InvoicePayment for Id %s"\
                             % invoice_payment_id)
 
     def get_invoice_payments(self, invoice_id=None, payment_id=None):
@@ -633,7 +645,7 @@ class Zuora:
             zPayment = response.records[0]
             return zPayment
         else:
-            raise ZuoraException("Unable to find Payment for Id %s"\
+            raise DoesNotExist("Unable to find Payment for Id %s"\
                             % payment_id)
 
     def get_payments(self, account_id=None):
@@ -701,7 +713,7 @@ class Zuora:
             zPaymentMethod = response.records[0]
             return zPaymentMethod
         else:
-            raise ZuoraException("Unable to find Payment Method for %s. %s"\
+            raise DoesNotExist("Unable to find Payment Method for %s. %s"\
                             % (payment_method_id, response))
 
     def get_payment_methods(self, account_id=None, account_number=None,
@@ -807,7 +819,7 @@ class Zuora:
             zProducts = response.records
             return zProducts
         except:
-            raise ZuoraException("Unable to find Product for %s"\
+            raise DoesNotExist("Unable to find Product for %s"\
                             % product_id)
         
     def get_rate_plan_charges(self, rate_plan_id=None,
@@ -861,7 +873,7 @@ class Zuora:
         try:
             return response.records
         except:
-            raise ZuoraException(
+            raise DoesNotExist(
                             "Unable to find Rate Plan Charges for %s"\
                             % rate_plan_id)
             
@@ -918,7 +930,7 @@ class Zuora:
             zProductRatePlans = response.records
             return zProductRatePlans
         except:
-            raise ZuoraException("Unable to find Product Rate Plan for %s"\
+            raise DoesNotExist("Unable to find Product Rate Plan for %s"\
                             % product_rate_plan_id)
 
     def get_product_rate_plan_charges(self, product_rate_plan_id=None,
@@ -968,7 +980,7 @@ class Zuora:
         try:
             return response.records
         except:
-            raise ZuoraException(
+            raise DoesNotExist(
                             "Unable to find Product Rate Plan Charges for %s"\
                             % product_rate_plan_id)
 
@@ -1011,7 +1023,7 @@ class Zuora:
             zProductRatePlanChargeTiers = response.records
             return zProductRatePlanChargeTiers
         except:
-            raise ZuoraException(
+            raise DoesNotExist(
                     "Unable to find Product Rate Plan Charges Tiers for %s"\
                     % product_rate_plan_charge_id)
 
@@ -1401,7 +1413,7 @@ class Zuora:
         
         # Check User
         if not user:
-            raise ZuoraException("No User Selected.")
+            raise MissingRequired("No User Selected.")
         
         # Get Today
         today = date.today()
@@ -1461,11 +1473,11 @@ class Zuora:
         
         # Check User / Billing Address
         if not user:
-            raise ZuoraException("No User Selected.")
+            raise MissingRequired("No User Selected.")
         elif not billing_address:
-            raise ZuoraException("No Billing Address Selected.")
+            raise MissingRequired("No Billing Address Selected.")
         elif not zAccount:
-            raise ZuoraException("No Existing Account.")
+            raise MissingRequired("No Existing Account.")
         
         # Build Contact
         # TODO: remove ns2
@@ -1666,7 +1678,7 @@ class Zuora:
         
         # Create Payment Method if it doesn't exist
         if not payment_method:
-            raise ZuoraException(
+            raise MissingRequired(
                 "No payment method for Account: %s" % zAccount.Id)
         zSubscribeRequest.PaymentMethod = payment_method
         
