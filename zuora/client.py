@@ -41,6 +41,18 @@ class ZuoraException(Exception):
     def __str__(self):
         return "%s" % (self.value,)
 
+class DoesNotExist(ZuoraException):
+    """
+    Exception for when objects don't exist in Zuora
+    """
+    pass
+
+class MissingRequired(ZuoraException):
+    """
+    Exception for when a required parameter is missing
+    """
+    pass
+
 
 # main class
 class Zuora:
@@ -351,7 +363,7 @@ class Zuora:
 
         # Create Payment Method on Account
         if not payment_method_id:
-            raise ZuoraException(
+            raise MissingRequired(
                 "No payment method for Account: %s" % zAccount.Id)
         else:
             zPaymentMethod = self.get_payment_method(payment_method_id)
@@ -386,30 +398,37 @@ class Zuora:
             zAccount = response.records[0]
             return zAccount
         else:
-            raise ZuoraException("Unable to find Account for User ID %s"\
+            raise DoesNotExist("Unable to find Account for User ID %s"\
                             % user_id)
 
-    def get_contact(self, email, account_id=None):
+    def get_contact(self, account_id=None, email=None):
         """
         Checks to see if the loaded user has a contact
         """
-
+        qs_filter = []
+        
+        if account_id:
+            qs_filter.append("AccountId = '%s'" % account_id)
+        
+        if email:
+            qs_filter.append("PersonalEmail = '%s'" % email)
+         
         # Search for Matching Account
         qs = """
             SELECT Id FROM Contact
             WHERE PersonalEmail = '%s'
             """ % email
-
+        
         # Check if Contact Exists for Particular Account
         if account_id:
             qs = qs + " AND AccountId = '%s'" % account_id
-
+        
         response = self.query(qs)
         if getattr(response, "records") and len(response.records) > 0:
             zContact = response.records[0]
             return zContact
         else:
-            raise ZuoraException("Unable to find Contact for Email %s"\
+            raise DoesNotExist("Unable to find Contact for Email %s"\
                             % email)
 
     def get_invoice(self, invoice_id=None):
@@ -435,7 +454,7 @@ class Zuora:
             zInvoice = response.records[0]
             return zInvoice
         else:
-            raise ZuoraException("Unable to find Invoice for Id %s"\
+            raise DoesNotExist("Unable to find Invoice for Id %s"\
                             % invoice_id)
 
     def get_invoice_pdf(self, invoice_id=None):
@@ -457,7 +476,7 @@ class Zuora:
             zInvoice = response.records[0]
             return zInvoice.Body
         else:
-            raise ZuoraException("Unable to find Invoice for Id %s"\
+            raise DoesNotExist("Unable to find Invoice for Id %s"\
                             % invoice_id)
 
     def get_invoices(self, account_id=None):
@@ -559,7 +578,7 @@ class Zuora:
             zInvoicePayment = response.records[0]
             return zInvoicePayment
         else:
-            raise ZuoraException("Unable to find InvoicePayment for Id %s"\
+            raise DoesNotExist("Unable to find InvoicePayment for Id %s"\
                             % invoice_payment_id)
 
     def get_invoice_payments(self, invoice_id=None, payment_id=None):
@@ -624,7 +643,7 @@ class Zuora:
             zPayment = response.records[0]
             return zPayment
         else:
-            raise ZuoraException("Unable to find Payment for Id %s"\
+            raise DoesNotExist("Unable to find Payment for Id %s"\
                             % payment_id)
 
     def get_payments(self, account_id=None):
@@ -692,7 +711,7 @@ class Zuora:
             zPaymentMethod = response.records[0]
             return zPaymentMethod
         else:
-            raise ZuoraException("Unable to find Payment Method for %s. %s"\
+            raise DoesNotExist("Unable to find Payment Method for %s. %s"\
                             % (payment_method_id, response))
 
     def get_payment_methods(self, account_id=None, account_number=None,
@@ -798,9 +817,64 @@ class Zuora:
             zProducts = response.records
             return zProducts
         except:
-            raise ZuoraException("Unable to find Product for %s"\
+            raise DoesNotExist("Unable to find Product for %s"\
                             % product_id)
-
+        
+    def get_rate_plan_charges(self, rate_plan_id=None,
+                                    rate_plan_id_list=None,
+                                    pricing_info="Price"):
+        """
+        Gets the Rate Plan Charges
+        
+        :param str rate_plan_id: RatePlanID
+        :param list rate_plan_id_list: list of RatePlanID's
+        """
+        # Note: Can only use OveragePrice or Price or IncludedUnits or
+        # DiscountAmount or DiscountPercentage in one query
+        # Note: No clue what that means, but that's the error I get from Zuora
+        # if I try to include them all.
+        qs = """
+            SELECT
+                AccountingCode, ApplyDiscountTo,
+                BillCycleDay, BillCycleType,
+                BillingPeriodAlignment, ChargedThroughDate,
+                ChargeModel, ChargeNumber, ChargeType, CreatedById,
+                CreatedDate, Description, DiscountLevel,
+                DMRC, DTCV, EffectiveEndDate, EffectiveStartDate,
+                IsLastSegment, MRR, Name, NumberOfPeriods,
+                OriginalId, OverageCalculationOption,
+                OverageUnusedUnitsCreditOption, %s,
+                PriceIncreasePercentage, ProcessedThroughDate,
+                ProductRatePlanChargeId, Quantity, RatePlanId,
+                Segment, TCV, TriggerDate, TriggerEvent,
+                UnusedUnitsCreditRates, UOM, UpdatedById, UpdatedDate,
+                UpToPeriods, UsageRecordRatingOption, 
+                UseDiscountSpecificAccountingCode, Version
+            FROM RatePlanCharge
+            """ % pricing_info
+        where_id_string = "RatePlanId = '%s'"
+        # If only querying with one rate plan id
+        if rate_plan_id:
+            qs_filter = where_id_string % rate_plan_id
+        # Otherwise we're querying with multiple rate plan id's
+        else:
+            qs_filter = None
+            if rate_plan_id_list:
+                id_filter_list = [where_id_string % rp_id \
+                          for rp_id in rate_plan_id_list]
+                # Combine the rate plan ids for the WHERE clause
+                qs_filter = " OR ".join(id_filter_list)
+        
+        qs += " WHERE %s" % qs_filter
+        
+        response = self.query(qs)
+        try:
+            return response.records
+        except:
+            raise DoesNotExist(
+                            "Unable to find Rate Plan Charges for %s"\
+                            % rate_plan_id)
+            
     def get_product_rate_plans(self, product_rate_plan_id=None,
                                product_id_list=None, effective_start=None,
                                effective_end=None):
@@ -854,11 +928,12 @@ class Zuora:
             zProductRatePlans = response.records
             return zProductRatePlans
         except:
-            raise ZuoraException("Unable to find Product Rate Plan for %s"\
+            raise DoesNotExist("Unable to find Product Rate Plan for %s"\
                             % product_rate_plan_id)
 
     def get_product_rate_plan_charges(self, product_rate_plan_id=None,
-                                      product_rate_plan_id_list=None):
+                                      product_rate_plan_id_list=None,
+                                      product_rate_plan_charge_id=None):
         """
         Gets the Product Rate Plan Charges.
 
@@ -882,9 +957,12 @@ class Zuora:
             FROM ProductRatePlanCharge
             """
         where_id_string = "ProductRatePlanId = '%s'"
-        # If only one product is requested
+        # If only querying with one product rate plan id
         if product_rate_plan_id:
             qs_filter = where_id_string % product_rate_plan_id
+        # if we are pulling a product rate plan charge based on its id
+        elif product_rate_plan_charge_id:
+            qs_filter = "Id = '%s'" % product_rate_plan_charge_id
         # Otherwise multiple products are being requested
         else:
             qs_filter = None
@@ -898,10 +976,9 @@ class Zuora:
 
         response = self.query(qs)
         try:
-            zProductRatePlanCharges = response.records
-            return zProductRatePlanCharges
+            return response.records
         except:
-            raise ZuoraException(
+            raise DoesNotExist(
                             "Unable to find Product Rate Plan Charges for %s"\
                             % product_rate_plan_id)
 
@@ -944,7 +1021,7 @@ class Zuora:
             zProductRatePlanChargeTiers = response.records
             return zProductRatePlanChargeTiers
         except:
-            raise ZuoraException(
+            raise DoesNotExist(
                     "Unable to find Product Rate Plan Charges Tiers for %s"\
                     % product_rate_plan_charge_id)
 
@@ -1334,8 +1411,8 @@ class Zuora:
 
         # Check User
         if not user:
-            raise ZuoraException("No User Selected.")
-
+            raise MissingRequired("No User Selected.")
+        
         # Get Today
         today = date.today()
 
@@ -1662,8 +1739,8 @@ def zuora_serialize(obj):
     - Very primative serializer but is able to handle
       the basic Zuora SOAP Objects.
     """
-    basic_serializer = [str, int, float, unicode, date, datetime]
-
+    basic_serializer = [str, int, float, unicode, date, datetime, long]
+    
     if not obj:
         return None
 
@@ -1686,3 +1763,13 @@ def zuora_serialize(obj):
             else:
                 obj_dict[key] = zuora_serialize(attr[1])
         return obj_dict
+
+def zuora_serialize_list(response_list):
+    """
+    Serialize a list of Zuora objects
+    """
+    serialized_list = []
+    if response_list:
+        for item in response_list:
+            serialized_list.append(zuora_serialize(item))
+    return serialized_list
