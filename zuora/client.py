@@ -413,15 +413,16 @@ class Zuora:
         if email:
             qs_filter.append("PersonalEmail = '%s'" % email)
          
-        # Search for Matching Account
         qs = """
-            SELECT Id FROM Contact
-            WHERE PersonalEmail = '%s'
-            """ % email
-        
-        # Check if Contact Exists for Particular Account
-        if account_id:
-            qs = qs + " AND AccountId = '%s'" % account_id
+            SELECT
+                AccountId, Address1, Address2, City, Country, County,
+                CreatedById, CreatedDate, Description, Fax, FirstName,
+                HomePhone, Id, LastName, MobilePhone, NickName, OtherPhone,
+                OtherPhoneType, PersonalEmail, PostalCode, State, TaxRegion,
+                UpdatedById, UpdatedDate, WorkEmail, WorkPhone
+            FROM Contact
+            WHERE %s
+            """  % " AND ".join(qs_filter)
         
         response = self.query(qs)
         if getattr(response, "records") and len(response.records) > 0:
