@@ -413,7 +413,6 @@ class Zuora:
         if email:
             qs_filter.append("PersonalEmail = '%s'" % email)
          
-        # Search for Matching Account
         qs = """
             SELECT
                 AccountId, Address1, Address2, City, Country, County,
