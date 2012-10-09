@@ -401,7 +401,7 @@ class Zuora:
             raise DoesNotExist("Unable to find Account for User ID %s"\
                             % user_id)
 
-    def get_contact(self, account_id=None, email=None):
+    def get_contact(self, email=None, account_id=None):
         """
         Checks to see if the loaded user has a contact
         """
