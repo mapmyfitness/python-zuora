@@ -29,7 +29,7 @@ import logging
 log = logging.getLogger(__name__)
 
 # Tell suds to stop logging and stfu (it logs noise as errors)
-log_suds = logging.getLogger('suds.client')
+log_suds = logging.getLogger('suds')
 log_suds.propagate = False
 
 
@@ -406,13 +406,13 @@ class Zuora:
         Checks to see if the loaded user has a contact
         """
         qs_filter = []
-        
+
         if account_id:
             qs_filter.append("AccountId = '%s'" % account_id)
-        
+
         if email:
             qs_filter.append("PersonalEmail = '%s'" % email)
-         
+
         qs = """
             SELECT
                 AccountId, Address1, Address2, City, Country, County,
@@ -423,7 +423,7 @@ class Zuora:
             FROM Contact
             WHERE %s
             """  % " AND ".join(qs_filter)
-        
+
         response = self.query(qs)
         if getattr(response, "records") and len(response.records) > 0:
             zContact = response.records[0]
@@ -820,13 +820,13 @@ class Zuora:
         except:
             raise DoesNotExist("Unable to find Product for %s"\
                             % product_id)
-        
+
     def get_rate_plan_charges(self, rate_plan_id=None,
                                     rate_plan_id_list=None,
                                     pricing_info="Price"):
         """
         Gets the Rate Plan Charges
-        
+
         :param str rate_plan_id: RatePlanID
         :param list rate_plan_id_list: list of RatePlanID's
         """
@@ -849,7 +849,7 @@ class Zuora:
                 ProductRatePlanChargeId, Quantity, RatePlanId,
                 Segment, TCV, TriggerDate, TriggerEvent,
                 UnusedUnitsCreditRates, UOM, UpdatedById, UpdatedDate,
-                UpToPeriods, UsageRecordRatingOption, 
+                UpToPeriods, UsageRecordRatingOption,
                 UseDiscountSpecificAccountingCode, Version
             FROM RatePlanCharge
             """ % pricing_info
@@ -865,9 +865,9 @@ class Zuora:
                           for rp_id in rate_plan_id_list]
                 # Combine the rate plan ids for the WHERE clause
                 qs_filter = " OR ".join(id_filter_list)
-        
+
         qs += " WHERE %s" % qs_filter
-        
+
         response = self.query(qs)
         try:
             return response.records
@@ -875,7 +875,7 @@ class Zuora:
             raise DoesNotExist(
                             "Unable to find Rate Plan Charges for %s"\
                             % rate_plan_id)
-            
+
     def get_product_rate_plans(self, product_rate_plan_id=None,
                                product_id_list=None, effective_start=None,
                                effective_end=None):
@@ -1413,7 +1413,7 @@ class Zuora:
         # Check User
         if not user:
             raise MissingRequired("No User Selected.")
-        
+
         # Get Today
         today = date.today()
 
@@ -1741,7 +1741,7 @@ def zuora_serialize(obj):
       the basic Zuora SOAP Objects.
     """
     basic_serializer = [str, int, float, unicode, date, datetime, long]
-    
+
     if not obj:
         return None
 
