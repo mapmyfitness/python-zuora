@@ -347,13 +347,13 @@ class Zuora:
 
     def create_active_account(self, zAccount=None, zContact=None,
                               payment_method_id=None, user=None,
-                              billing_address=None):
+                              billing_address=None, site_name=None):
         """
         Create an Active Account for use in Subscribe()
         """
         # Create Account if it doesn't exist
         if not zAccount:
-            zAccount = self.make_account(user=user)
+            zAccount = self.make_account(user=user, site_name=site_name)
 
         # Create Bill-To Contact on Account
         if not zContact:
@@ -1394,7 +1394,8 @@ class Zuora:
         # Return the Match
         return zRecords
 
-    def make_account(self, user=None, currency='USD', status="Draft", lazy=False):
+    def make_account(self, user=None, currency='USD', status="Draft",
+		     lazy=False, site_name=None):
         """
         The customer's account. Zuora uses the Account object to track all
         subscriptions, usage, and transactions for a single account to be
@@ -1438,6 +1439,9 @@ class Zuora:
 
         if self.create_test_users:
             zAccount.Test_Account__c = 1
+	
+	if site_name:
+	    zAccount.User_Site__c = site_name
 
         if lazy:
             return zAccount
@@ -1630,7 +1634,8 @@ class Zuora:
                   term_type="TERMED", renewal_term=None,
                   account_name=None, subscription_name=None,
                   recurring=True, payment_method=None, order_id=None,
-                  user=None, billing_address=None, start_date=None):
+                  user=None, billing_address=None, start_date=None,
+		  site_name=None):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
@@ -1655,7 +1660,7 @@ class Zuora:
         #Used to be called even if account existed, pulling it out for now
         # Get or Create Account
         if not zAccount:
-            zAccount = self.make_account(user=user)
+            zAccount = self.make_account(user=user, site_name=site_name)
 
         if not zContact and not zAccount.Id:
             # Create Contact
