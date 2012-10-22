@@ -1064,6 +1064,20 @@
 					</sequence>
 				</complexType>
 			</element>
+           <element name="queryMore"> 
+                <complexType> 
+                    <sequence> 
+                        <element name="queryLocator" type="zns:QueryLocator"/> 
+                    </sequence> 
+                </complexType> 
+            </element> 
+            <element name="queryMoreResponse"> 
+                <complexType> 
+                    <sequence> 
+                        <element name="result" type="zns:QueryResult"/> 
+                    </sequence> 
+                </complexType> 
+            </element> 
 			<element name="SessionHeader">
 				<complexType>
 					<sequence>
@@ -1071,6 +1085,14 @@
 					</sequence>
 				</complexType>
 			</element>
+            <element name="QueryOptions">
+                <complexType>
+                    <sequence>
+                        <element name="batchSize" type="int" minOccurs="0"/>
+                        <element name="caseSensitive" type="boolean" minOccurs="0" />
+                    </sequence>
+                </complexType>
+            </element>
 			<element name="getUserInfoResponse">
 				<complexType>
 					<sequence>
@@ -1282,8 +1304,15 @@
 	<message name="queryResponse">
 		<part name="parameters" element="zns:queryResponse" />
 	</message>
+    <message name="queryMoreRequest"> 
+        <part element="zns:queryMore" name="parameters"/> 
+    </message> 
+    <message name="queryMoreResponse"> 
+        <part element="zns:queryMoreResponse" name="parameters"/> 
+    </message> 
 	<message name="Header">
 		<part name="CallOptions" element="zns:CallOptions" />
+		<part name="QueryOptions" element="zns:QueryOptions" />
 		<part name="SessionHeader" element="zns:SessionHeader" />
 	</message>
 	
@@ -1350,6 +1379,13 @@
 			<fault message="zns:InvalidQueryLocatorFault" name="InvalidQueryLocatorFault" />
 			<fault message="zns:UnexpectedErrorFault" name="UnexpectedErrorFault" />
 		</operation>
+        <operation name="queryMore"> 
+            <documentation>Gets the next batch of sObjects from a query</documentation> 
+            <input  message="zns:queryMoreRequest"/> 
+            <output message="zns:queryMoreResponse"/> 
+            <fault  message="zns:InvalidQueryLocatorFault" name="InvalidQueryLocatorFault"/> 
+            <fault  message="zns:UnexpectedErrorFault" name="UnexpectedErrorFault"/> 
+        </operation> 
         <operation name="getUserInfo">
         	<input message="zns:getUserInfo"/>
         	<output message="zns:getUserInfoResponse"/>
@@ -1459,6 +1495,23 @@
 				<soap:fault name="UnexpectedErrorFault" use="literal" />
 			</fault>
 		</operation>
+        <operation name="queryMore"> 
+            <soap:operation soapAction=""/> 
+            <input> 
+				<soap:header use="literal" message="zns:Header" part="QueryOptions" />
+				<soap:header use="literal" message="zns:Header" part="SessionHeader" />
+				<soap:body use="literal" />
+            </input> 
+            <output> 
+                <soap:body use="literal"/> 
+            </output> 
+            <fault name="InvalidQueryLocatorFault"> 
+                <soap:fault name="InvalidQueryLocatorFault" use="literal"/> 
+            </fault> 
+            <fault name="UnexpectedErrorFault"> 
+                <soap:fault name="UnexpectedErrorFault" use="literal"/> 
+            </fault> 
+        </operation>
 		<operation name="delete">
 			<soap:operation soapAction="" />
 			<input>

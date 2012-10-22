@@ -224,6 +224,25 @@ class Zuora:
         # return the response
         return response
 
+    def query_more(self, query_locator):
+        """
+        Use queryMore() to request additional results from a previous
+        query() call. If your initial query() call returns more
+        than 2000 results, you can use queryMore() to query for more
+        the additional results
+
+        :param string query_string: ZQL query string
+
+        :returns: the API response
+        """
+
+        # Call Query
+        fn = self.client.service.queryMore
+        response = self.call(fn, queryLocator=query_locator)
+
+        # return the response
+        return response
+
     def update(self, z_object):
         """
         Updates the information in one or more objects of the same type. You
