@@ -41,8 +41,6 @@ class ZuoraException(Exception):
     def __str__(self):
         return "%s" % (self.value,)
 
-print 'bar imported as %r' % (__file__,)
-
 class DoesNotExist(ZuoraException):
     """
     Exception for when objects don't exist in Zuora
