@@ -41,6 +41,8 @@ class ZuoraException(Exception):
     def __str__(self):
         return "%s" % (self.value,)
 
+print 'bar imported as %r' % (__file__,)
+
 class DoesNotExist(ZuoraException):
     """
     Exception for when objects don't exist in Zuora
@@ -1439,9 +1441,10 @@ class Zuora:
 
         if self.create_test_users:
             zAccount.Test_Account__c = 1
-	
-	if site_name:
-	    zAccount.User_Site__c = site_name
+            zAccount.User_Site__c = "staging"
+
+        if site_name:
+            zAccount.User_Site__c = site_name
 
         if lazy:
             return zAccount
@@ -1635,7 +1638,7 @@ class Zuora:
                   account_name=None, subscription_name=None,
                   recurring=True, payment_method=None, order_id=None,
                   user=None, billing_address=None, start_date=None,
-		  site_name=None):
+                  site_name=None):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
