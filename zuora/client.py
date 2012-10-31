@@ -1636,7 +1636,7 @@ class Zuora:
                   account_name=None, subscription_name=None,
                   recurring=True, payment_method=None, order_id=None,
                   user=None, billing_address=None, start_date=None,
-                  site_name=None):
+                  site_name=None, discount_product_rate_plan_id=None):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
@@ -1672,6 +1672,11 @@ class Zuora:
         # Get Rate Plan & Build Rate Plan Data
         zRatePlanData = self.make_rate_plan_data(product_rate_plan_id)
 
+        if discount_product_rate_plan_id:
+            zDiscountRatePlanData = self.make_rate_plan_data(discount_product_rate_plan_id)
+        else:
+            zDiscountRatePlanData = None
+
         # Create Subscription
         zSubscription = self.make_subscription(monthly_term=monthly_term,
                                                recurring=recurring,
@@ -1687,7 +1692,12 @@ class Zuora:
         # Subscription Data
         zSubscriptionData = self.client.factory.create('ns0:SubscriptionData')
         zSubscriptionData.Subscription = zSubscription
-        zSubscriptionData.RatePlanData = zRatePlanData
+        
+        # Apply the discount rate plan if it exists
+        if zDiscountRatePlanData:
+            zSubscriptionData.RatePlanData = [zRatePlanData, zDiscountRatePlanData]
+        else:
+            zSubscriptionData.RatePlanData = zRatePlanData
 
         # Subscribe
         zSubscribeRequest = self.client.factory.create('ns0:SubscribeRequest')
