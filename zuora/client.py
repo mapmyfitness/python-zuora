@@ -362,11 +362,10 @@ class Zuora:
                                          zAccount=zAccount)
 
         # Create Payment Method on Account
-        if not payment_method_id:
-            raise MissingRequired(
-                "No payment method for Account: %s" % zAccount.Id)
-        else:
+        if payment_method_id:
             zPaymentMethod = self.get_payment_method(payment_method_id)
+        else:
+            zPaymentMethod = None
 
         # Now Update the Draft Account to be Active
         zAccountUpdate = self.client.factory.create('ns2:Account')
