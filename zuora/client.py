@@ -373,8 +373,12 @@ class Zuora:
         zAccountUpdate.Status = 'Active'
         zAccountUpdate.BillToId = zContact.Id
         zAccountUpdate.SoldToId = zContact.Id
-        zAccountUpdate.DefaultPaymentMethodId = payment_method_id
-        zAccountUpdate.AutoPay = True
+        # If we don't require a payment method, AutoPay must be False
+        if payment_method_id:
+            zAccountUpdate.DefaultPaymentMethodId = payment_method_id
+            zAccountUpdate.AutoPay = True
+        else:
+            zAccountUpdate.AutoPay = False
         response = self.update(zAccountUpdate)
         if not isinstance(response, list) or not response[0].Success:
             raise ZuoraException(
