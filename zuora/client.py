@@ -331,18 +331,28 @@ class Zuora:
 
         :returns: response
         """
-        effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-
+        print "You're in the right place"
+        # todo: ADSUB-11, change effective_date to the end of the subscription
+        # todo: make sure this doesn't give people an extra year if their membership just failed renewal
+        subscriptions = self.get_subscriptions(subscription_id=subscription_id)
+        print "Subscriptions: "
+        print subscriptions
+        if subscriptions:
+            effective_date_str = subscriptions[0]['SubscriptionEndDate']
+            effective_date = effective_date_str
+        else:
+            print "No subscriptions found... defaulting to now()"
+            effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         # Create the product cancellation amendment
-        zAmendment = self.create_product_amendment(
-                                        effective_date,
-                                        subscription_id,
-                                        name_prepend="Subscription Cancel",
-                                        amendment_type='Cancellation')
-
-        # Update the product amendment
-        response = self.update_product_amendment(effective_date, zAmendment)
-
+#        zAmendment = self.create_product_amendment(
+#                                        effective_date,
+#                                        subscription_id,
+#                                        name_prepend="Subscription Cancel",
+#                                        amendment_type='Cancellation')
+#
+#        # Update the product amendment
+#        response = self.update_product_amendment(effective_date, zAmendment)
+        response = ""
         return response
 
     def create_active_account(self, zAccount=None, zContact=None,
