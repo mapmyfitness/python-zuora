@@ -344,15 +344,14 @@ class Zuora:
             print "No subscriptions found... defaulting to now()"
             effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         # Create the product cancellation amendment
-#        zAmendment = self.create_product_amendment(
-#                                        effective_date,
-#                                        subscription_id,
-#                                        name_prepend="Subscription Cancel",
-#                                        amendment_type='Cancellation')
-#
-#        # Update the product amendment
-#        response = self.update_product_amendment(effective_date, zAmendment)
-        response = ""
+        zAmendment = self.create_product_amendment(
+                                        effective_date,
+                                        subscription_id,
+                                        name_prepend="Subscription Cancel",
+                                        amendment_type='Cancellation')
+
+        # Update the product amendment
+        response = self.update_product_amendment(effective_date, zAmendment)
         return response
 
     def create_active_account(self, zAccount=None, zContact=None,
