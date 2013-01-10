@@ -369,7 +369,8 @@ class Zuora:
 
     def create_active_account(self, zAccount=None, zContact=None,
                               payment_method_id=None, user=None,
-                              billing_address=None, site_name=None):
+                              billing_address=None, shipping_address=None,
+                              site_name=None):
         """
         Create an Active Account for use in Subscribe()
         """
@@ -382,6 +383,14 @@ class Zuora:
             zContact = self.make_contact(user=user,
                                          billing_address=billing_address,
                                          zAccount=zAccount)
+        
+        # Add the shipping contact if it exists
+        if shipping_address:
+            zShippingContact = self.make_contact(user=user,
+                                         billing_address=shipping_address,
+                                         zAccount=zAccount)
+        else:
+            zShippingContact = None
 
         # Create Payment Method on Account
         if payment_method_id:
@@ -394,7 +403,12 @@ class Zuora:
         zAccountUpdate.Id = zAccount.Id
         zAccountUpdate.Status = 'Active'
         zAccountUpdate.BillToId = zContact.Id
-        zAccountUpdate.SoldToId = zContact.Id
+        log.error("Shipping address: %s" % shipping_address)
+        log.error("Shipping Contact: %s, Regular contact: %s" % (zShippingContact.Id, zContact.Id))
+        if zShippingContact:
+            zAccountUpdate.SoldToId = zShippingContact.Id
+        else:    
+            zAccountUpdate.SoldToId = zContact.Id
         # If we don't require a payment method, AutoPay must be False
         if payment_method_id:
             zAccountUpdate.DefaultPaymentMethodId = payment_method_id
@@ -407,7 +421,8 @@ class Zuora:
                 "Unknown Error updating Account. %s" % response)
 
         return {'account': zAccount, 'contact': zContact,
-                'payment_method': zPaymentMethod}
+                'payment_method': zPaymentMethod,
+                'shipping_contact': zShippingContact}
 
     def get_account(self, user_id):
         """
@@ -1482,7 +1497,7 @@ class Zuora:
         return zAccount
 
     def make_contact(self, user=None, billing_address=None, zAccount=None,
-        lazy=False):
+                     lazy=False):
         """
         This defines the contact (the end user) for the account. There are two
         types of contacts that need to be created as part of the customer
@@ -1655,13 +1670,15 @@ class Zuora:
         return response
 
     def subscribe(self, product_rate_plan_id, monthly_term, zAccount=None,
-                  zContact=None, process_payments_flag=True,
+                  zContact=None, zShippingContact=None,
+                  process_payments_flag=True,
                   generate_invoice_flag=True, generate_preview=False,
                   term_type="TERMED", renewal_term=None,
                   account_name=None, subscription_name=None,
                   recurring=True, payment_method=None, order_id=None,
-                  user=None, billing_address=None, start_date=None,
-                  site_name=None, discount_product_rate_plan_id=None):
+                  user=None, billing_address=None, shipping_address=None,
+                  start_date=None, site_name=None,
+                  discount_product_rate_plan_id=None):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
@@ -1692,6 +1709,12 @@ class Zuora:
             # Create Contact
             zContact = self.make_contact(user=user,
                                          billing_address=billing_address,
+                                         zAccount=zAccount)
+        
+        # Add the shipping contact if it exists
+        if not zShippingContact and shipping_address:
+            zShippingContact = self.make_contact(user=user,
+                                         billing_address=shipping_address,
                                          zAccount=zAccount)
 
         # Get Rate Plan & Build Rate Plan Data
@@ -1728,6 +1751,9 @@ class Zuora:
         zSubscribeRequest = self.client.factory.create('ns0:SubscribeRequest')
         zSubscribeRequest.Account = zAccount
         zSubscribeRequest.BillToContact = zContact
+        # Add the shipping contact if it exists
+        if zShippingContact:
+            zSubscribeRequest.SoldToContact = zShippingContact
         zSubscribeRequest.SubscriptionData = zSubscriptionData
         zSubscribeRequest.SubscribeOptions = zSubscriptionOptions
 
