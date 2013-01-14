@@ -403,8 +403,6 @@ class Zuora:
         zAccountUpdate.Id = zAccount.Id
         zAccountUpdate.Status = 'Active'
         zAccountUpdate.BillToId = zContact.Id
-        log.error("Shipping address: %s" % shipping_address)
-        log.error("Shipping Contact: %s, Regular contact: %s" % (zShippingContact.Id, zContact.Id))
         if zShippingContact:
             zAccountUpdate.SoldToId = zShippingContact.Id
         else:    
@@ -1536,6 +1534,8 @@ class Zuora:
             zContact.State = billing_address.get("state")
             zContact.PostalCode = billing_address.get("postal_code")
             zContact.Country = billing_address["country_code"]
+            if billing_address.get("phone"):
+                zContact.HomePhone = billing_address["phone"]
         else:
             zContact.FirstName = user['first_name']
             zContact.LastName = user['last_name']
