@@ -158,7 +158,7 @@ class Zuora:
                 kwargs['retry_attempt'] = retry_attempt
                 return self.call(fn, *args, **kwargs)
             else:
-                log.error("Zuora request reached max retries.")
+                raise ZuoraException("Zuora request reached max retries.")
             
         return response
 
