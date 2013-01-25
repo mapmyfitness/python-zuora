@@ -19,6 +19,8 @@
 from datetime import datetime, date
 from os import path
 import re
+import errno
+import socket
 
 from suds import WebFault
 from suds.client import Client
@@ -116,7 +118,8 @@ class Zuora:
         :returns: the client response
         """
         retry = False
-        retry_attempt = kwargs.get('retry_attempt', 0)
+        kwargs['initial_retry'] = kwargs.get('initial_retry', datetime.now())
+        last_restry = kwargs.get('last_retry', datetime.now())
         try:
             response = fn(*args, **kwargs)
         except WebFault as err:
@@ -153,12 +156,16 @@ class Zuora:
 
         # Retry the same call up to three times
         if retry:
-            if retry_attempt < 3:
-                retry_attempt += 1
-                kwargs['retry_attempt'] = retry_attempt
+            initial_delta = datetime.now() - kwargs['initial_retry']
+            last_delta = datetime.now() - last_restry
+            # If we haven't surpassed a maximum retry limit of 10 seconds
+            # And the last retry was more than two seconds ago
+            if initial_delta.seconds < 10 and last_delta.seconds > 2:
+                # Set the last retry to now and retry again
+                kwargs['last_retry'] = datetime.now()
                 return self.call(fn, *args, **kwargs)
             else:
-                raise ZuoraException("Zuora request reached max retries.")
+                raise ZuoraException("Zuora request reached max retry time.")
             
         return response
 
