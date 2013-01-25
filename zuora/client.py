@@ -136,11 +136,11 @@ class Zuora:
                 raise ZuoraException("WebFault. Invalid Session. %s"\
                                     % err.__dict__)
         # If the connection to Zuora drops out, retry
-        except socket.error, e:
+        except socket.error as e:
             # A socket error
             retry = True
             log.error("Zuora Socket error. Retry attempt: %s" % retry_attempt)
-        except IOError, e:
+        except IOError as e:
             if e.errno == errno.EPIPE:
                 # EPIPE error
                 log.error("Zuora Broken pipe. Retry attempt: %s" \
