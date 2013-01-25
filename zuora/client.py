@@ -115,7 +115,8 @@ class Zuora:
 
         :returns: the client response
         """
-
+        retry = False
+        retry_attempt = kwargs.get('retry_attempt', 0)
         try:
             response = fn(*args, **kwargs)
         except WebFault as err:
@@ -131,10 +132,34 @@ class Zuora:
                 log.error("WebFault. Invalid Session. %s" % err.__dict__)
                 raise ZuoraException("WebFault. Invalid Session. %s"\
                                     % err.__dict__)
+        # If the connection to Zuora drops out, retry
+        except socket.error, e:
+            # A socket error
+            retry = True
+            log.error("Zuora Socket error. Retry attempt: %s" % retry_attempt)
+        except IOError, e:
+            if e.errno == errno.EPIPE:
+                # EPIPE error
+                log.error("Zuora Broken pipe. Retry attempt: %s" \
+                          % retry_attempt)
+            else:
+                # Other error
+                log.error("IOError %s. Retry attempt: %s" \
+                          % (e.errno, retry_attempt))
+            retry = True
         except Exception as error:
             log.error("Zuora: Unexpected Error. %s" % error)
             raise ZuoraException("Zuora: Unexpected Error. %s" % error)
 
+        # Retry the same call up to three times
+        if retry:
+            if retry_attempt < 3:
+                retry_attempt += 1
+                kwargs['retry_attempt'] = retry_attempt
+                return self.call(fn, *args, **kwargs)
+            else:
+                log.error("Zuora request reached max retries.")
+            
         return response
 
     # Client Create
