@@ -861,7 +861,7 @@ class Zuora:
 
     def get_rate_plan_charges(self, rate_plan_id=None,
                                     rate_plan_id_list=None,
-                                    rate_plan_charge_id=None,
+                                    product_rate_plan_charge_id=None,
                                     pricing_info="Price"):
         """
         Gets the Rate Plan Charges
@@ -896,8 +896,10 @@ class Zuora:
         # If only querying with one rate plan id
         if rate_plan_id:
             qs_filter = where_id_string % rate_plan_id
-        elif rate_plan_charge_id:
-            qs_filter = "Id = '%s'" % rate_plan_charge_id
+        elif product_rate_plan_charge_id:
+            qs = "SELECT UpToPeriods FROM RatePlanCharge"
+            qs_filter = "ProductRatePlanChargeId = '%s'" % \
+                                        product_rate_plan_charge_id
         # Otherwise we're querying with multiple rate plan id's
         else:
             qs_filter = None
