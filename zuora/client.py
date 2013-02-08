@@ -910,7 +910,6 @@ class Zuora:
                 qs_filter = " OR ".join(id_filter_list)
 
         qs += " WHERE %s" % qs_filter
-        log.error(qs)
         response = self.query(qs)
         try:
             return response.records
