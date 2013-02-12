@@ -151,8 +151,9 @@ class Zuora:
 
         # Call Create
         fn = self.client.service.create
+        log.info("***Zuora Create Request: %s" % z_object)
         response = self.call(fn, z_object)
-
+        log.info("***Zuora Create Response: %s" % response)
         # return the response
         return response
 
@@ -1772,7 +1773,9 @@ class Zuora:
             zSubscribeRequest.PreviewOptions = zPreviewOptions
 
         fn = self.client.service.subscribe
+        log.info("***Subscribe Request: %s" % zSubscribeRequest)
         response = self.call(fn, zSubscribeRequest)
+        log.info("***Subscribe Response: %s" % response)
 
         # return the response
         return response
