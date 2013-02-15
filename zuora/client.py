@@ -1531,8 +1531,11 @@ class Zuora:
         zContact = self.client.factory.create('ns2:Contact')
 
         if billing_address is not None:
-            zContact.FirstName = billing_address["first_name"]
-            zContact.LastName = billing_address["last_name"]
+            # Make sure the first and last name are never empty
+            zContact.FirstName = name_underscore_fix(
+                                                billing_address["first_name"])
+            zContact.LastName = name_underscore_fix(
+                                                billing_address["last_name"])
             zContact.Address1 = billing_address["street_1"]
             zContact.Address2 = billing_address.get("street_2")
             zContact.City = billing_address["city"]
@@ -1542,8 +1545,8 @@ class Zuora:
             if billing_address.get("phone"):
                 zContact.HomePhone = billing_address["phone"]
         else:
-            zContact.FirstName = user['first_name']
-            zContact.LastName = user['last_name']
+            zContact.FirstName = name_underscore_fix(user['first_name'])
+            zContact.LastName = name_underscore_fix(user['last_name'])
 
         zContact.PersonalEmail = user["email"]
 
@@ -1839,6 +1842,7 @@ def zuora_serialize(obj):
                 obj_dict[key] = zuora_serialize(attr[1])
         return obj_dict
 
+
 def zuora_serialize_list(response_list):
     """
     Serialize a list of Zuora objects
@@ -1848,3 +1852,12 @@ def zuora_serialize_list(response_list):
         for item in response_list:
             serialized_list.append(zuora_serialize(item))
     return serialized_list
+
+
+def name_underscore_fix(name_field):
+    """
+    Make sure the name field has a value, otherwise return an underscore
+    """
+    if name_field and name_field != '':
+        return name_field
+    return '_'
