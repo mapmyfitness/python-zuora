@@ -377,7 +377,8 @@ class Zuora:
         """
         # Create Account if it doesn't exist
         if not zAccount:
-            zAccount = self.make_account(user=user, site_name=site_name)
+            zAccount = self.make_account(user=user, site_name=site_name,
+                                         billing_address=billing_address)
 
         # Create Bill-To Contact on Account
         if not zContact:
@@ -1438,7 +1439,7 @@ class Zuora:
         return zRecords
 
     def make_account(self, user=None, currency='USD', status="Draft",
-		     lazy=False, site_name=None):
+		     lazy=False, site_name=None, billing_address=None):
         """
         The customer's account. Zuora uses the Account object to track all
         subscriptions, usage, and transactions for a single account to be
@@ -1471,8 +1472,15 @@ class Zuora:
         zAccount.BillCycleDay = today.day
         zAccount.CrmId = str(user["id"])
         zAccount.Currency = currency
-        zAccount.Name = "%s, %s"[0:50] % (user["last_name"],
-                                          user["first_name"])
+        if billing_address and billing_address["last_name"] != '' and \
+           billing_address["first_name"] != '':
+            zAccount.Name = "%s, %s"[0:50] % \
+                        (billing_address["last_name"],
+                         billing_address["first_name"])
+        else:
+            zAccount.Name = "%s, %s"[0:50] % \
+                            (name_underscore_fix(user["last_name"]),
+                             name_underscore_fix(user["first_name"]))
         zAccount.PaymentTerm = 'Due Upon Receipt'
         zAccount.Status = status
 
@@ -1711,7 +1719,8 @@ class Zuora:
         #Used to be called even if account existed, pulling it out for now
         # Get or Create Account
         if not zAccount:
-            zAccount = self.make_account(user=user, site_name=site_name)
+            zAccount = self.make_account(user=user, site_name=site_name,
+                                         billing_address=billing_address)
 
         if not zContact and not zAccount.Id:
             # Create Contact
