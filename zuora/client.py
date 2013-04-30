@@ -35,11 +35,7 @@ log_suds.propagate = False
 
 class ZuoraException(Exception):
     """This is our base exception for the Zuora lib"""
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return "%s" % (self.value,)
+    pass
 
 class DoesNotExist(ZuoraException):
     """
