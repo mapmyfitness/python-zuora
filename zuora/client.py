@@ -594,6 +594,22 @@ class Zuora:
         # Return None if Not Found
         return None
 
+    def apply_invoice_adjustment(self, invoice_id, amount):
+        InvoiceAdjustment = self.client.factory.create('ns2:InvoiceAdjustment')
+        InvoiceAdjustment.InvoiceId = invoice_id
+        InvoiceAdjustment.Amount = amount
+        if amount > 0.0:
+            InvoiceAdjustment.Type = 'Credit'
+        else:
+            InvoiceAdjustment.Type = 'Debit'
+        response = self.create(InvoiceAdjustment)
+        if not isinstance(response, list) or not response[0].Success:
+            raise ZuoraException(
+                "Unknown Error within Invoice Adjustment. %s" % response)
+
+        # return
+        return response
+
     def get_invoice_payment(self, invoice_payment_id=None):
         """
         Gets the Invoice Payment
@@ -1395,7 +1411,7 @@ class Zuora:
             qs_filter.append("AccountId = '%s'" % account_id)
 
         if auto_renew:
-            qs_filter.append("AutoRenew = " + ("'%s'" % auto_renew).lower())
+            qs_filter.append("AutoRenew = %s" % auto_renew.lower())
 
         if status:
             qs_filter.append("Status = '%s'" % status)
