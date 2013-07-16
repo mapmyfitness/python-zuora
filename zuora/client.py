@@ -2,7 +2,7 @@
     Zuora Interface Module
     ~~~~~~~~~~~~~~~~~~~~~~
 
-    Current WSDL files are based on Zuora WSDL 39.
+    Current WSDL files are based on Zuora WSDL 48.
 
     Accounts for our Zuora setup are fetch by either A-user_id (i.e. A-32432)
     or just by the user id (look at the get_account WHERE clause).
@@ -367,7 +367,7 @@ class Zuora:
     def create_active_account(self, zAccount=None, zContact=None,
                               payment_method_id=None, user=None,
                               billing_address=None, shipping_address=None,
-                              site_name=None):
+                              site_name=None, prepaid=False):
         """
         Create an Active Account for use in Subscribe()
         """
@@ -403,10 +403,10 @@ class Zuora:
         zAccountUpdate.BillToId = zContact.Id
         if zShippingContact:
             zAccountUpdate.SoldToId = zShippingContact.Id
-        else:    
+        else:
             zAccountUpdate.SoldToId = zContact.Id
         # If we don't require a payment method, AutoPay must be False
-        if payment_method_id:
+        if payment_method_id and not prepaid:
             zAccountUpdate.DefaultPaymentMethodId = payment_method_id
             zAccountUpdate.AutoPay = True
         else:
@@ -476,12 +476,12 @@ class Zuora:
         # Search for Matching Account
         qs = """
             SELECT
-                AccountID, AdjustmentAmount, Amount, AmountWithoutTax,
+                AccountID, AdjustmentAmount, Amount,
                 Balance, CreatedDate, DueDate,
                 IncludesOneTime, IncludesRecurring, IncludesUsage,
                 InvoiceDate, InvoiceNumber,
-                PaymentAmount, RefundAmount, Source, Status,
-                TargetDate, TaxAmount, TaxExemptAmount
+                PaymentAmount, RefundAmount, Status,
+                TargetDate
             FROM Invoice
             WHERE Id = '%s'
             """ % invoice_id
@@ -532,12 +532,12 @@ class Zuora:
         if qs_filter:
             qs = """
                 SELECT
-                    AccountID, AdjustmentAmount, Amount, AmountWithoutTax,
+                    AccountID, AdjustmentAmount, Amount,
                     Balance, CreatedDate, DueDate,
                     IncludesOneTime, IncludesRecurring, IncludesUsage,
                     InvoiceDate, InvoiceNumber,
-                    PaymentAmount, RefundAmount, Source, Status,
-                    TargetDate, TaxAmount, TaxExemptAmount
+                    PaymentAmount, RefundAmount, Status,
+                    TargetDate
                 FROM Invoice
                 WHERE %s
                 """ % " AND ".join(qs_filter)
@@ -598,6 +598,7 @@ class Zuora:
         InvoiceAdjustment = self.client.factory.create('ns2:InvoiceAdjustment')
         InvoiceAdjustment.InvoiceId = invoice_id
         InvoiceAdjustment.Amount = amount
+        InvoiceAdjustment.ReasonCode = 'Write-off'
         if amount > 0.0:
             InvoiceAdjustment.Type = 'Credit'
         else:
@@ -1006,7 +1007,7 @@ class Zuora:
                 ExclusiveOfferFlag__c,
                 HiddenBenefitText__c, Id,  IncludedUnits, MaxQuantity,
                 MinQuantity, Name, NumberOfPeriod, OverageCalculationOption,
-                OverageUnusedUnitsCreditOption, PriceIncreaseOption,
+                OverageUnusedUnitsCreditOption,
                 PriceIncreasePercentage, ProductRatePlanId,
                 RevRecCode, RevRecTriggerCondition, ShortCode__c,
                 SmoothingModel, SortOrder__c, SpecificBillingPeriod,
@@ -1052,7 +1053,7 @@ class Zuora:
         """
         qs = """
             SELECT
-                Active, Currency, EndingUnit, IsOveragePrice,
+                Currency, EndingUnit, IsOveragePrice,
                 Price, PriceFormat, ProductRatePlanChargeId,
                 StartingUnit, Tier
             FROM ProductRatePlanChargeTier
@@ -1266,7 +1267,7 @@ class Zuora:
                     # get rate plan charge tiers
                     rpct_list = []
                     for (_, rpct_dict) in product_rate_plan_charge_tier_dict\
-                                .get(rpc_dict["id"]).items():
+                                .get(rpc_dict["id"], {}).items():
                         rpct_list.append(rpct_dict)
 
                     # append rate plan charge tiers
@@ -1334,9 +1335,8 @@ class Zuora:
             # Iterate through Rate Plan Charge Tiers
             price = pricing_dict[charge_model][charge_type]
             for rpct in rpc["rate_charge_tiers"]:
-                is_active = rpct["active"]
                 is_overage_price = rpct["is_overage_price"]
-                if is_active == True and is_overage_price == False:
+                if is_overage_price == False:
                     price = price + float(rpct["price"])
 
             pricing_dict[charge_model][charge_type] = price
@@ -1706,7 +1706,8 @@ class Zuora:
                   recurring=True, payment_method=None, order_id=None,
                   user=None, billing_address=None, shipping_address=None,
                   start_date=None, site_name=None,
-                  discount_product_rate_plan_id=None):
+                  discount_product_rate_plan_id=None,
+                  external_payment_method=None):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
@@ -1765,6 +1766,21 @@ class Zuora:
                                     .create("ns0:SubscribeOptions")
         zSubscriptionOptions.GenerateInvoice = generate_invoice_flag
         zSubscriptionOptions.ProcessPayments = process_payments_flag
+        
+        if external_payment_method:
+            product_rate_plan_charges = self.get_product_rate_plan_charges(
+                                    product_rate_plan_id=product_rate_plan_id)
+            product_rate_plan_charge_tiers = \
+                self.get_product_rate_plan_charge_tiers(
+                product_rate_plan_charge_id=product_rate_plan_charges[0].Id)
+            zExternalPaymentOptions = self.client.factory\
+                                    .create("ns0:ExternalPaymentOptions")
+            zExternalPaymentOptions.PaymentMethodId = \
+                                                external_payment_method.Id
+            zExternalPaymentOptions.Amount = \
+                                    product_rate_plan_charge_tiers[0].Price
+            zSubscriptionOptions.ExternalPaymentOptions = \
+                                                zExternalPaymentOptions
 
         # Subscription Data
         zSubscriptionData = self.client.factory.create('ns0:SubscriptionData')
