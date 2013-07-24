@@ -32,6 +32,7 @@ log = logging.getLogger(__name__)
 #log_suds = logging.getLogger('suds')
 #log_suds.propagate = False
 logging.getLogger('suds.transport').setLevel(logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 
 class ZuoraException(Exception):
