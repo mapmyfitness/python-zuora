@@ -29,8 +29,9 @@ import logging
 log = logging.getLogger(__name__)
 
 # Tell suds to stop logging and stfu (it logs noise as errors)
-log_suds = logging.getLogger('suds')
-log_suds.propagate = False
+#log_suds = logging.getLogger('suds')
+#log_suds.propagate = False
+logging.getLogger('suds.transport').setLevel(logging.DEBUG)
 
 
 class ZuoraException(Exception):
@@ -114,32 +115,20 @@ class Zuora:
 
         try:
             response = fn(*args, **kwargs)
-            log.info(self.client.last_sent())
-            log.info(self.client.last_received())
         except WebFault as err:
             if err.fault.faultcode == "fns:INVALID_SESSION":
                 self.login()
-                log.info(self.client.last_sent())
-                log.info(self.client.last_received())
                 try:
                     response = fn(*args, **kwargs)
-                    log.info(self.client.last_sent())
-                    log.info(self.client.last_received())
                 except Exception as error:
-                    log.info(self.client.last_sent())
-                    log.info(self.client.last_received())
                     log.error("Zuora: Unexpected Error. %s" % error)
                     raise ZuoraException("Zuora: Unexpected Error. %s"\
                                          % error)
             else:
-                log.info(self.client.last_sent())
-                log.info(self.client.last_received())
                 log.error("WebFault. Invalid Session. %s" % err.__dict__)
                 raise ZuoraException("WebFault. Invalid Session. %s"\
                                     % err.__dict__)
         except Exception as error:
-            log.info(self.client.last_sent())
-            log.info(self.client.last_received())
             log.error("Zuora: Unexpected Error. %s" % error)
             raise ZuoraException("Zuora: Unexpected Error. %s" % error)
 
