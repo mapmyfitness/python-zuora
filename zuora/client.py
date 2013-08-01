@@ -1781,6 +1781,7 @@ class Zuora:
                                     product_rate_plan_charge_tiers[0].Price
             zExternalPaymentOptions.EffectiveDate = datetime.now().strftime(
                                                         '%Y-%m-%dT%H:%M:%S')
+            log.info("***Effective Date: %s" % zExternalPaymentOptions.EffectiveDate)
             zSubscriptionOptions.ExternalPaymentOptions = \
                                                 zExternalPaymentOptions
 
