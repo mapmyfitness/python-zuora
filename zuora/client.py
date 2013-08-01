@@ -1767,6 +1767,7 @@ class Zuora:
         zSubscriptionOptions.GenerateInvoice = generate_invoice_flag
         zSubscriptionOptions.ProcessPayments = process_payments_flag
         
+        log.info("***external_payment_method: %s" % external_payment_method)
         if external_payment_method:
             product_rate_plan_charges = self.get_product_rate_plan_charges(
                                     product_rate_plan_id=product_rate_plan_id)
