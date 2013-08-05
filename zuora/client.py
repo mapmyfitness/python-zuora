@@ -1767,6 +1767,14 @@ class Zuora:
         zSubscriptionOptions.GenerateInvoice = generate_invoice_flag
         zSubscriptionOptions.ProcessPayments = process_payments_flag
         
+        # Attach SubscribeInvoiceProcessingOptions
+        SubscribeInvoiceProcessingOptions = self.client.factory\
+                            .create("ns0:SubscribeInvoiceProcessingOptions")
+        SubscribeInvoiceProcessingOptions.InvoiceTargetDate = \
+                                datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        SubscribeInvoiceProcessingOptions.InvoiceProcessingScope = \
+                                                                "Subscription"
+        
         log.info("***external_payment_method: %s" % external_payment_method)
         if external_payment_method:
             product_rate_plan_charges = self.get_product_rate_plan_charges(
