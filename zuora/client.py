@@ -1774,6 +1774,8 @@ class Zuora:
                                 datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         SubscribeInvoiceProcessingOptions.InvoiceProcessingScope = \
                                                                 "Subscription"
+        zSubscriptionOptions.SubscribeInvoiceProcessingOptions = \
+                                            SubscribeInvoiceProcessingOptions
         
         log.info("***external_payment_method: %s" % external_payment_method)
         if external_payment_method:
