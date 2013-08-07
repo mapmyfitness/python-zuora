@@ -32,6 +32,8 @@ log = logging.getLogger(__name__)
 log_suds = logging.getLogger('suds')
 log_suds.propagate = False
 
+SOAP_TIMESTAMP = '%Y-%m-%dT%H:%M:%S-06:00'
+
 
 class ZuoraException(Exception):
     """This is our base exception for the Zuora lib"""
@@ -313,7 +315,7 @@ class Zuora:
 
         :returns: response
         """
-        effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        effective_date = datetime.now().strftime(SOAP_TIMESTAMP)
 
         # Create the new product amendment
         zAmendment = self.create_product_amendment(
@@ -352,7 +354,7 @@ class Zuora:
             effective_date_str = subscriptions[0]['SubscriptionEndDate']
             effective_date = effective_date_str
         else:
-            effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+            effective_date = datetime.now().strftime(SOAP_TIMESTAMP)
         # Create the product cancellation amendment
         zAmendment = self.create_product_amendment(
                                         effective_date,
@@ -1211,7 +1213,7 @@ class Zuora:
 
         # Defaults
         matching_rate_plans = []
-        qs_datetime_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S')
+        qs_datetime_now = datetime.utcnow().strftime(SOAP_TIMESTAMP)
 
         # Get Product and optionally filter by ShortCode
         product_dict = self.get_camel_converted_products(shortcodes=shortcodes)
@@ -1629,12 +1631,12 @@ class Zuora:
         :returns: zSubscription
         """
 
-        effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        effective_date = datetime.now().strftime(SOAP_TIMESTAMP)
         if start_date is None:
             start_date = effective_date
         else:
             if not isinstance(start_date, basestring):
-                start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S')
+                start_date = start_date.strftime(SOAP_TIMESTAMP)
 
         zSubscription = self.client.factory.create('ns2:Subscription')
         if name:
@@ -1676,7 +1678,7 @@ class Zuora:
 
         :returns: response
         """
-        effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        effective_date = datetime.now().strftime(SOAP_TIMESTAMP)
 
         # Create the product amendment removal
         zAmendment = self.create_product_amendment(
@@ -1774,7 +1776,7 @@ class Zuora:
         SubscribeInvoiceProcessingOptions = self.client.factory\
                             .create("ns0:SubscribeInvoiceProcessingOptions")
         SubscribeInvoiceProcessingOptions.InvoiceTargetDate = \
-                                datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+                                datetime.now().strftime(SOAP_TIMESTAMP)
         SubscribeInvoiceProcessingOptions.InvoiceProcessingScope = \
                                                                 "Subscription"
         zSubscriptionOptions.SubscribeInvoiceProcessingOptions = \
@@ -1794,7 +1796,7 @@ class Zuora:
             zExternalPaymentOptions.Amount = \
                                     product_rate_plan_charge_tiers[0].Price
             zExternalPaymentOptions.EffectiveDate = datetime.now().strftime(
-                                                        '%Y-%m-%dT%H:%M:%S')
+                                                            SOAP_TIMESTAMP)
             zSubscriptionOptions.ExternalPaymentOptions = \
                                                 zExternalPaymentOptions
 
