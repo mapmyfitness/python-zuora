@@ -1632,6 +1632,9 @@ class Zuora:
         effective_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         if start_date is None:
             start_date = effective_date
+        else:
+            if not isinstance(start_date, basestring):
+                start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S')
 
         zSubscription = self.client.factory.create('ns2:Subscription')
         if name:
