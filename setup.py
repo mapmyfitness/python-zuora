@@ -2,7 +2,7 @@
 
 setupArgs = {
     'name': 'zuora',
-    'version': '1.0.0.5',
+    'version': '1.0.0.6',
     'author': 'MapMyFitness',
     'author_email': 'brandon.fredericks@mapmyfitness.com',
     'url': 'http://github.com/mapmyfitness/python-zuora',

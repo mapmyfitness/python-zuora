@@ -262,7 +262,8 @@ class Zuora:
 
     def create_product_amendment(self, effective_date, subscription_id,
                                   name_prepend, amendment_type,
-                                  status="Draft"):
+                                  status="Draft", description=None,
+                                  name=None):
         """
         Creates a new product amendment and adds an id for the new
         amendment
@@ -270,10 +271,15 @@ class Zuora:
         # Make Amendment
         zAmendment = self.client.factory.create('ns2:Amendment')
         zAmendment.EffectiveDate = effective_date
-        zAmendment.Name = "%s %s" % (name_prepend, effective_date)
+        if name:
+            zAmendment.Name = name
+        else:
+            zAmendment.Name = "%s %s" % (name_prepend, effective_date)
         zAmendment.Status = status
         zAmendment.SubscriptionId = subscription_id
         zAmendment.Type = amendment_type
+        if description:
+            zAmendment.Description = description
 
         # Create Amendment
         response = self.create(zAmendment)
@@ -340,7 +346,9 @@ class Zuora:
         # return
         return response
 
-    def cancel_subscription(self, subscription_id):
+    def cancel_subscription(self, subscription_id, effective_date=None,
+                            description=None, name="Subscription Cancel",
+                            status="Completed", contract_effective_date=None):
         """
         Canceling a Subscription (using Amendment)
 
@@ -349,21 +357,31 @@ class Zuora:
 
         :returns: response
         """
-        subscriptions = self.get_subscriptions(subscription_id=subscription_id)
-        if subscriptions:
-            effective_date_str = subscriptions[0]['SubscriptionEndDate']
-            effective_date = effective_date_str
-        else:
-            effective_date = datetime.now().strftime(SOAP_TIMESTAMP)
+        if not effective_date:
+            subscriptions = self.get_subscriptions(
+                                            subscription_id=subscription_id)
+            
+            if subscriptions:
+                effective_date = subscriptions[0]['SubscriptionEndDate']
+            else:
+                effective_date = datetime.now().strftime(SOAP_TIMESTAMP)
         # Create the product cancellation amendment
         zAmendment = self.create_product_amendment(
                                         effective_date,
                                         subscription_id,
-                                        name_prepend="Subscription Cancel",
-                                        amendment_type='Cancellation')
+                                        'Subscription Cancel',
+                                        'Cancellation',
+                                        description=description,
+                                        name=name,
+                                        status=status)
 
         # Update the product amendment
-        response = self.update_product_amendment(effective_date, zAmendment)
+        if contract_effective_date:
+            response = self.update_product_amendment(contract_effective_date,
+                                                     zAmendment)
+        else:
+            response = self.update_product_amendment(effective_date,
+                                                     zAmendment)
         return response
 
     def create_active_account(self, zAccount=None, zContact=None,
@@ -650,10 +668,8 @@ class Zuora:
 
         if invoice_id:
             qs_filter.append("InvoiceId = '%s'" % invoice_id)
-
         if payment_id:
             qs_filter.append("PaymentId = '%s'" % payment_id)
-
         if qs_filter:
             qs = """
                 SELECT
@@ -662,7 +678,6 @@ class Zuora:
                 FROM InvoicePayment
                 WHERE %s
                 """ % " AND ".join(qs_filter)
-
             response = self.query(qs)
             zInvoicePayments = response.records
 
@@ -913,10 +928,6 @@ class Zuora:
         # If only querying with one rate plan id
         if rate_plan_id:
             qs_filter = where_id_string % rate_plan_id
-        elif product_rate_plan_charge_id:
-            qs = "SELECT UpToPeriods FROM RatePlanCharge"
-            qs_filter = "ProductRatePlanChargeId = '%s'" % \
-                                        product_rate_plan_charge_id
         # Otherwise we're querying with multiple rate plan id's
         else:
             qs_filter = None
@@ -1013,7 +1024,8 @@ class Zuora:
                 PriceIncreasePercentage, ProductRatePlanId,
                 RevRecCode, RevRecTriggerCondition, ShortCode__c,
                 SmoothingModel, SortOrder__c, SpecificBillingPeriod,
-                TriggerEvent, UOM, UseDiscountSpecificAccountingCode
+                TriggerEvent, UOM, UpToPeriods,
+                UseDiscountSpecificAccountingCode
             FROM ProductRatePlanCharge
             """
         where_id_string = "ProductRatePlanId = '%s'"
