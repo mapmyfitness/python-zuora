@@ -806,8 +806,8 @@ class Zuora:
                 SELECT
                     DefaultPaymentMethodId
                 FROM Account
-                WHERE AccountNumber = '%s'
-                """ % account_number
+                WHERE AccountNumber = '%s' or AccountNumber = 'A-%s'
+                """ % (account_number, account_number)
 
             response = self.query(qs)
             if getattr(response, "records") and len(response.records) > 0:
@@ -816,7 +816,7 @@ class Zuora:
                 try:
                     payment_method_id = zAccount.DefaultPaymentMethodId
                 except:
-                    return None
+                    return []
 
                 # Return as a List
                 return [self.get_payment_method(payment_method_id)]
@@ -851,9 +851,7 @@ class Zuora:
 
             # Return the Match
             return zPaymentMethods
-
-        # Return None if Not Found
-        return None
+        return []
 
     def get_products(self, product_id=None, shortcodes=None):
         """
