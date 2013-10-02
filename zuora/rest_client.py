@@ -1,5 +1,7 @@
 import requests
-from account_manager import AccountManager
+from rest_wrapper import (AccountManager, CatalogManager, PaymentMethodManager,
+                          SubscriptionManager, TransactionManager,
+                          UsageManager)
 
 ## This file contains some parameters that will need to be changed to work in different tenants:
 ## REQUIRED PARAMS:
@@ -15,8 +17,6 @@ from account_manager import AccountManager
 #baseUrl = 'https://apisandbox-api.zuora.com/rest/v1/'
 #username = 'rest.user@test.com'
 #password = 'Zuora001!'
-
-defaultCancellationPolicy = 'EndOfCurrentTerm'
 
 #Payment Id of Default Credit Card (specific per tenant)
 hpmCreditCardPaymentMethodId = '2c92c0f93cf64d94013cfe2d20db61a7'
@@ -36,7 +36,12 @@ class RestClient(object):
     def __init__(self, zuora_settings):
         self.zuora_config = ZuoraConfig(zuora_settings)
         self.login()
-        self.account_manager = AccountManager(self.zuora_config)
+        self.account = AccountManager(self.zuora_config)
+        self.catalog = CatalogManager(self.zuora_config)
+        self.payment_method = PaymentMethodManager(self.zuora_config)
+        self.subscription = SubscriptionManager(self.zuora_config)
+        self.transaction = TransactionManager(self.zuora_config)
+        self.usage = UsageManager(self.zuora_config)
 
     def login(self):
         fullUrl = self.zuora_config.base_url + 'connections'

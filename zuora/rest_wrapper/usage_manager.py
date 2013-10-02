@@ -1,19 +1,13 @@
-import config
 import requests
+from request_base import RequestBase
 
 
-def getUsage(accountKey, pageSize=10):
-    fullUrl = config.baseUrl + 'usage/accounts/' + accountKey
-    params = {
-        'pageSize': pageSize
-    }
-    response = requests.get(fullUrl, params=params, headers=config.headers)
-    return config.getJson(response)
+class UsageManager(RequestBase):
 
-
-### Test Methods ###
-def testgetUsage():
-    print('Testing getUsage')
-    response = getUsage(config.sampleAccountNumber)
-    if response:
-        print('Success: ', response['success'])
+    def get_usage(self, accountKey, pageSize=10):
+        fullUrl = self.zuora_config.base_url + 'usage/accounts/' + \
+                  accountKey
+        params = {'pageSize': pageSize}
+        response = requests.get(fullUrl, params=params,
+                                headers=self.zuora_config.headers)
+        return self.get_json(response)

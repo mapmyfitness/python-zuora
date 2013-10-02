@@ -1,114 +1,61 @@
-import config
 import json
 import requests
-
-def getSubsByAcct(accountKey, pageSize = 10):
-    fullUrl = config.baseUrl + 'subscriptions/accounts/' + accountKey
-    data = { 'pageSize' : pageSize }
-
-    response = requests.get(fullUrl, params=data, headers=config.headers)
-    return config.getJson(response)
+from request_base import RequestBase
 
 
-def getSubsByKey(subsKey):
-    fullUrl = config.baseUrl + 'subscriptions/' + subsKey
-    response = requests.get(fullUrl, headers=config.headers)
-    return config.getJson(response)
+class SubscriptionManager(RequestBase):
 
-
-def renewSub(subsKey, jsonParams={'invoiceCollect':False}):
-    fullUrl = config.baseUrl + 'subscriptions/' + subsKey + '/renew'
-    data = json.dumps(jsonParams)
-    response = requests.put(fullUrl, data=data, headers=config.headers)
-    return config.getJson(response)
-
-
-def cancelSub(subsKey,
-              jsonParams={
-                  'cancellationPolicy': config.defaultCancellationPolicy,
-                  'invoiceCollect': False}):
-    fullUrl = config.baseUrl + 'subscriptions/' + subsKey + '/cancel'
-    data = json.dumps(jsonParams)
-    response = requests.put(fullUrl, data=data, headers=config.headers)
-    return config.getJson(response)
-
-
-def previewSubscription(jsonParams):
-    fullUrl = config.baseUrl + 'subscriptions/preview'
-    data = json.dumps(jsonParams)
-    response = requests.post(fullUrl, data=data, headers=config.headers)
-    return config.getJson(response)
-
-
-def createSubscription(jsonParams):
-    fullUrl = config.baseUrl + 'subscriptions'
-    data = json.dumps(jsonParams)
-    response = requests.post(fullUrl, data=data, headers=config.headers)
-    return config.getJson(response)
-
-
-def updateSubscription(subsKey, jsonParams):
-    fullUrl = config.baseUrl + 'subscriptions/' + subsKey
-    data = json.dumps(jsonParams)
-    response = requests.put(fullUrl, data=data, headers=config.headers)
-    return config.getJson(response)
-
-
-### Test Methods ###
-def testgetSubsByAcct():
-    print('Testing getSubsByAcct')
-    response = getSubsByAcct(config.sampleAccountNumber)
-    if response:
-        print('Success: ', response['success'])
-        if response['success'] == True:
-            print('Successfully retrieved Subscriptions')
-            print('Subscriptions: ', response['subscriptions'])
-        else:
-            print('Subscriptions weren\'t retrieved')
-            print('Reason: ', response['reasons'])
-    else:
-        print('Exceptions thrown. Test failed.')
-
-
-def testgetSubsByKey():
-    print('Testing getSubsByKey')
-    response = getSubsByKey(config.sampleSubsNumber)
-    if response:
-        print('Success: ', response['success'])
-        if response['success'] == True:
-            print('Successfully retrieved Subscription')
-            print('Subscription Id: ', response['id'])
-        else:
-            print('Subscriptions weren\'t retrieved')
-            print('Reason: ', response['reasons'])
-    else:
-        print('Exceptions thrown. Test failed.')
-
-
-def testrenewSub():
-    print('Testing renewSub')
-    response = renewSub(config.sampleSubsNumber)
-    if response:
-        print('Success: ', response['success'])
-        if response['success'] == True:
-            print('Successfully renewed subscription')
-        else:
-            print('Subscription was not renewed successfully')
-            print('Reason: ', response['reasons'])
-    else:
-        print('Exceptions thrown. Test failed.')
-
-
-def testcancelSub():
-    print('Testing cancelSub')
-    response = cancelSub('A-S00001734')
-    if response:
-        print('Success: ', response['success'])
-        if response['success'] == True:
-            print('Successfully canceled subscription')
-        else:
-            print('Subscription was not canceled successfully')
-            print('Reason: ', response['reasons'])
-    else:
-        print('Exceptions thrown. Test failed.')
+    def get_subscriptions_by_account(self, accountKey, pageSize=10):
+        fullUrl = self.zuora_config.base_url + 'subscriptions/accounts/' + \
+                  accountKey
+        data = {'pageSize': pageSize}
+    
+        response = requests.get(fullUrl, params=data,
+                                headers=self.zuora_config.headers)
+        return self.get_json(response)
+    
+    def get_subscriptions_by_key(self, subsKey):
+        fullUrl = self.zuora_config.base_url + 'subscriptions/' + subsKey
+        response = requests.get(fullUrl, headers=self.zuora_config.headers)
+        return self.get_json(response)
+    
+    def renew_subscription(self, subsKey,
+                           jsonParams={'invoiceCollect': False}):
+        fullUrl = self.zuora_config.base_url + 'subscriptions/' + subsKey + \
+                  '/renew'
+        data = json.dumps(jsonParams)
+        response = requests.put(fullUrl, data=data,
+                                headers=self.zuora_config.headers)
+        return self.get_json(response)
+    
+    def cancel_subscription(self, subsKey, jsonParams={}):
+        jsonParams.setdefault('cancellationPolicy',
+                              self.zuora_config.default_cancellation_policy)
+        fullUrl = self.zuora_config.base_url + 'subscriptions/' + subsKey + \
+                  '/cancel'
+        data = json.dumps(jsonParams)
+        response = requests.put(fullUrl, data=data,
+                                headers=self.zuora_config.headers)
+        return self.get_json(response)
+    
+    def preview_subscription(self, jsonParams):
+        fullUrl = self.zuora_config.base_url + 'subscriptions/preview'
+        data = json.dumps(jsonParams)
+        response = requests.post(fullUrl, data=data,
+                                 headers=self.zuora_config.headers)
+        return self.get_json(response)
+    
+    def create_subscription(self, jsonParams):
+        fullUrl = self.zuora_config.base_url + 'subscriptions'
+        data = json.dumps(jsonParams)
+        response = requests.post(fullUrl, data=data,
+                                 headers=self.zuora_config.headers)
+        return self.get_json(response)
+    
+    def update_subscription(self, subsKey, jsonParams):
+        fullUrl = self.zuora_config.base_url + 'subscriptions/' + subsKey
+        data = json.dumps(jsonParams)
+        response = requests.put(fullUrl, data=data,
+                                headers=self.zuora_config.headers)
+        return self.get_json(response)
         

@@ -35,6 +35,9 @@ log_suds.propagate = False
 SOAP_TIMESTAMP = '%Y-%m-%dT%H:%M:%S-06:00'
 
 
+from rest_client import RestClient
+
+
 class ZuoraException(Exception):
     """This is our base exception for the Zuora lib"""
     pass
@@ -104,6 +107,9 @@ class Zuora:
 
         # Force No Cache
         self.client.set_options(cache=None)
+        
+        # Create the rest client
+        self.rest_client = RestClient(zuora_settings)
 
     # Client Create
     def call(self, fn, *args, **kwargs):
@@ -346,42 +352,22 @@ class Zuora:
         # return
         return response
 
-    def cancel_subscription(self, subscription_id, effective_date=None,
-                            description=None, name="Subscription Cancel",
-                            status="Completed", contract_effective_date=None):
+    def cancel_subscription(self, subscription_key, effective_date=None):
         """
         Canceling a Subscription (using Amendment)
 
-        :param str subscription_id: The identification number for the\
+        :param str subscription_key: The identification number/name for the
             subscription that is being amended.
 
         :returns: response
         """
         if not effective_date:
-            subscriptions = self.get_subscriptions(
-                                            subscription_id=subscription_id)
-            
-            if subscriptions:
-                effective_date = subscriptions[0]['SubscriptionEndDate']
-            else:
-                effective_date = datetime.now().strftime(SOAP_TIMESTAMP)
-        # Create the product cancellation amendment
-        zAmendment = self.create_product_amendment(
-                                        effective_date,
-                                        subscription_id,
-                                        'Subscription Cancel',
-                                        'Cancellation',
-                                        description=description,
-                                        name=name,
-                                        status=status)
-
-        # Update the product amendment
-        if contract_effective_date:
-            response = self.update_product_amendment(contract_effective_date,
-                                                     zAmendment)
+            response = self.rest_client.subscription.cancel_subscription(
+                                                             subscription_key)
         else:
-            response = self.update_product_amendment(effective_date,
-                                                     zAmendment)
+            response = self.rest_client.subscription.cancel_subscription(
+                    subscription_key,
+                    jsonParams={'cancellationEffectiveDate': effective_date})
         return response
 
     def create_active_account(self, zAccount=None, zContact=None,
