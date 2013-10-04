@@ -1,10 +1,11 @@
 import json
 import requests
-from request_base import RequestBase
+from request_base import RequestBase, rest_client_reconnect
 
 
 class TransactionManager(RequestBase):
 
+    @rest_client_reconnect
     def get_invoices(self, accountKey, pageSize=10):
         fullUrl = self.zuora_config.base_url + \
                   'transactions/invoices/accounts/' + accountKey
@@ -15,6 +16,7 @@ class TransactionManager(RequestBase):
                                 headers=self.zuora_config.headers)
         return self.get_json(response)
     
+    @rest_client_reconnect
     def get_payments(self, accountKey, pageSize=10):
         fullUrl = self.zuora_config.base_url + \
                   'transactions/payments/accounts/' + accountKey
@@ -25,6 +27,7 @@ class TransactionManager(RequestBase):
                                 headers=self.zuora_config.headers)
         return self.get_json(response)
     
+    @rest_client_reconnect
     def invoice_and_collect(self, jsonParams):
         fullUrl = self.zuora_config.base_url + 'operations/invoice-collect'
         data = json.dumps(jsonParams)

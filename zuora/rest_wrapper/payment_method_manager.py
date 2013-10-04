@@ -1,10 +1,11 @@
-from request_base import RequestBase
+from request_base import RequestBase, rest_client_reconnect
 import json
 import requests
 
 
 class PaymentMethodManager(RequestBase):
 
+    @rest_client_reconnect
     def create_payment_method(self, **kwargs):
         fullUrl = self.zuora_config.base_url + 'payment-methods/credit-cards'
     
@@ -20,6 +21,7 @@ class PaymentMethodManager(RequestBase):
                                  headers=self.zuora_config.headers)
         return self.get_json(response)
     
+    @rest_client_reconnect
     def get_payment_methods(self, accountKey, pageSize=10):
         fullUrl = self.zuora_config.base_url + \
                   'payment-methods/credit-cards/accounts/' + accountKey
@@ -29,6 +31,7 @@ class PaymentMethodManager(RequestBase):
                                 headers=self.zuora_config.headers)
         return self.get_json(response)
     
+    @rest_client_reconnect
     def update_payment_method(self, paymentMethodId, **kwargs):
         fullUrl = self.zuora_config.base_url + \
                  'payment-methods/credit-cards/' + paymentMethodId
@@ -44,6 +47,7 @@ class PaymentMethodManager(RequestBase):
                                 headers=self.zuora_config.headers)
         return self.get_json(response)
     
+    @rest_client_reconnect
     def delete_payment_method(self, paymentMethodId):
         fullUrl = self.zuora_config.base_url + 'payment-methods/' + \
                   paymentMethodId

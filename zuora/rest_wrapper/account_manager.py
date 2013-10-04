@@ -1,6 +1,6 @@
 import json
 import requests
-from request_base import RequestBase
+from request_base import RequestBase, rest_client_reconnect
 
 # For more information on parameters and responses, please see
 # http://knowledgecenter.zuora.com/D_Zuora_APIs/REST_API/B_REST_API_reference/Accounts
@@ -8,6 +8,7 @@ from request_base import RequestBase
 
 class AccountManager(RequestBase):
 
+    @rest_client_reconnect
     def create_account(self, **kwargs):
         fullUrl = self.zuora_config.base_url + 'accounts'
     
@@ -21,6 +22,7 @@ class AccountManager(RequestBase):
                                  headers=self.zuora_config.headers)
         return self.get_json(response)
     
+    @rest_client_reconnect
     def get_account_summary(self, accountKey):
         fullUrl = self.zuora_config.base_url + 'accounts/' + accountKey + \
                   '/summary'
@@ -28,12 +30,14 @@ class AccountManager(RequestBase):
         response = requests.get(fullUrl, headers=self.zuora_config.headers)
         return self.get_json(response)
     
+    @rest_client_reconnect
     def get_account(self, accountKey):
         fullUrl = self.zuora_config.baseUrl + 'accounts/' + accountKey
     
         response = requests.get(fullUrl, headers=self.zuora_config.headers)
         return self.get_json(response)
     
+    @rest_client_reconnect
     def update_account(self, accountKey, **kwargs):
         fullUrl = self.zuora_config.baseUrl + 'accounts/' + accountKey
     

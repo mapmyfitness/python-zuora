@@ -35,7 +35,6 @@ class ZuoraConfig(object):
 class RestClient(object):
     def __init__(self, zuora_settings):
         self.zuora_config = ZuoraConfig(zuora_settings)
-        self.login()
         self.account = AccountManager(self.zuora_config)
         self.catalog = CatalogManager(self.zuora_config)
         self.payment_method = PaymentMethodManager(self.zuora_config)
@@ -43,8 +42,3 @@ class RestClient(object):
         self.transaction = TransactionManager(self.zuora_config)
         self.usage = UsageManager(self.zuora_config)
 
-    def login(self):
-        fullUrl = self.zuora_config.base_url + 'connections'
-    
-        response = requests.post(fullUrl, headers=self.zuora_config.headers)
-        return self.get_json(response)
