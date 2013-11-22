@@ -1,13 +1,16 @@
 #!/usr/bin/python -tt
 
 setupArgs = {
-    'name': 'zuora',
-    'version': '1.0.0.8',
+    'name': 'mmf-zuora',
+    'version': '1.0.0.9',
     'author': 'MapMyFitness',
     'author_email': 'brandon.fredericks@mapmyfitness.com',
     'url': 'http://github.com/mapmyfitness/python-zuora',
     'description': 'Zuora client library.',
-    'packages': ['zuora'],
+    'packages': [
+        'zuora',
+        'zuora.rest_wrapper',
+    ],
 }
 
 try:
