@@ -396,6 +396,24 @@ class Zuora:
                     subscription_key,
                     jsonParams={'cancellationEffectiveDate': effective_date})
         return response
+    
+    def create_payment_method(self, baid=None, user_email=None):
+        payment_method = self.client.factory.create('ns2:PaymentMethod')
+        if baid:
+            payment_method.PaypalBaid = baid
+            # Paypal user e-mail required
+            payment_method.PaypalEmail = user_email
+            payment_method.PaypalType = 'ExpressCheckout'
+            payment_method.Type = 'PayPal'
+        
+        # Create Payment Method
+        response = self.create(payment_method)
+        if not isinstance(response, list) or not response[0].Success:
+            raise ZuoraException(
+                "Unknown Error creating Payment Method. %s" % response)
+        payment_method.Id = response[0].Id
+
+        return payment_method
 
     def create_active_account(self, zAccount=None, zContact=None,
                               payment_method_id=None, user=None,
