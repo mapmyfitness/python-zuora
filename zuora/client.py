@@ -32,7 +32,6 @@ from suds.transport import Reply
 
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
 
 # Tell suds to stop logging and stfu (it logs noise as errors)
 log_suds = logging.getLogger('suds')
@@ -60,7 +59,7 @@ class HttpTransportWithKeepAlive(HttpAuthenticated):
             else:
                 return Reply(200, dict(req_response.headers), req_response.content)
         except requests.exceptions.RequestException as e:
-            raise TransportError(e.message, None)
+            raise TransportError(e.message, )
 
 
 class ZuoraException(Exception):
