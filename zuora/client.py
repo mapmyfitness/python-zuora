@@ -19,11 +19,16 @@
 from datetime import datetime, date
 from os import path
 import re
+import requests
+import urllib2 as u2
 
 from suds import WebFault
 from suds.client import Client
 from suds.sax.element import Element
 from suds.xsd.doctor import Import, ImportDoctor
+from suds.transport.http import HttpAuthenticated, HttpTransport, TransportError
+from suds.transport import Reply
+
 
 import logging
 log = logging.getLogger(__name__)
@@ -38,9 +43,29 @@ SOAP_TIMESTAMP = '%Y-%m-%dT%H:%M:%S-06:00'
 from rest_client import RestClient
 
 
+class HttpTransportWithKeepAlive(HttpAuthenticated):
+    s = requests.Session()
+
+    def open(self, request):
+        self.addcredentials(request)
+        return HttpTransport.open(self, request)
+
+    def send(self, request):
+        self.addcredentials(request)
+        try:
+            req_response = HttpTransportWithKeepAlive.s.post(request.url, data=request.message, headers=request.headers)
+            if req_response.status_code in (202, 204):
+                return None
+            else:
+                return Reply(200, dict(req_response.headers), req_response.content)
+        except requests.exceptions.RequestException as e:
+            raise TransportError(e.message, )
+
+
 class ZuoraException(Exception):
     """This is our base exception for the Zuora lib"""
     pass
+
 
 class DoesNotExist(ZuoraException):
     """
@@ -103,7 +128,7 @@ class Zuora:
                                     self.base_dir + "/" + self.wsdl_file)
 
         self.client = Client(url=wsdl_file, doctor=schema_doctor,
-                             cache=None)
+                             cache=None, transport=HttpTransportWithKeepAlive())
 
         # Force No Cache
         self.client.set_options(cache=None)
