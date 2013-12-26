@@ -25,7 +25,7 @@ from suds import WebFault
 from suds.client import Client
 from suds.sax.element import Element
 from suds.xsd.doctor import Import, ImportDoctor
-from suds.transport.http import HttpAuthenticated, HttpTransport, TransportError
+from suds.transport.http import HttpAuthenticated, HttpTransport
 from suds.transport import Reply
 
 
@@ -49,15 +49,10 @@ class HttpTransportWithKeepAlive(HttpAuthenticated, object):
         self.http = httplib2.Http()
 
     def open(self, request):
-        self.addcredentials(request)
         return HttpTransport.open(self, request)
 
     def send(self, request):
-        self.addcredentials(request)
-        if request.message:
-            headers, message = self.http.request(request.url, "POST", body=request.message, headers=request.headers)
-        else:
-            headers, message = self.http.request(request.url, "GET", headers=request.headers)
+        headers, message = self.http.request(request.url, "POST", body=request.message, headers=request.headers)
         response = Reply(200, headers, message)
         return response
 
