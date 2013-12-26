@@ -19,8 +19,7 @@
 from datetime import datetime, date
 from os import path
 import re
-import requests
-import urllib2 as u2
+import httplib2
 
 from suds import WebFault
 from suds.client import Client
@@ -47,7 +46,7 @@ class HttpTransportWithKeepAlive(HttpAuthenticated, object):
 
     def __init__(self):
         super(HttpTransportWithKeepAlive, self).__init__()
-        self.s = requests.Session()
+        self.http = httplib2.Http()
 
     def open(self, request):
         self.addcredentials(request)
@@ -55,20 +54,12 @@ class HttpTransportWithKeepAlive(HttpAuthenticated, object):
 
     def send(self, request):
         self.addcredentials(request)
-        try:
-            req_response = self.s.post(request.url, data=request.message, headers=request.headers)
-            if req_response.status_code > 200:
-                # INVALID_SESSION is common worflow to login
-                if "INVALID_SESSION" not in req_response.content:
-                    log.error("RESPONSE %s %s", req_response.status_code, req_response.content)
-                else:
-                    log.debug("RESPONSE %s %s", req_response.status_code, req_response.content)
-            if req_response.status_code in (202, 204):
-                return None
-            else:
-                return Reply(200, dict(req_response.headers), req_response.content)
-        except requests.exceptions.RequestException as e:
-            raise TransportError(e.message, )
+        if request.message:
+            headers, message = self.http.request(request.url, "POST", body=request.message, headers=request.headers)
+        else:
+            headers, message = self.http.request(request.url, "GET", headers=request.headers)
+        response = Reply(200, headers, message)
+        return response
 
 
 class ZuoraException(Exception):
