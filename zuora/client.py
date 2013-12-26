@@ -146,20 +146,14 @@ class Zuora:
         """
 
         try:
+            # this is low cost because of the keep alive
+            # an auth failure gives a 500 which closes connection
+            self.login()
             response = fn(*args, **kwargs)
         except WebFault as err:
-            if err.fault.faultcode == "fns:INVALID_SESSION":
-                self.login()
-                try:
-                    response = fn(*args, **kwargs)
-                except Exception as error:
-                    log.error("Zuora: Unexpected Error. %s" % error)
-                    raise ZuoraException("Zuora: Unexpected Error. %s"\
-                                         % error)
-            else:
-                log.error("WebFault. Invalid Session. %s" % err.__dict__)
-                raise ZuoraException("WebFault. Invalid Session. %s"\
-                                    % err.__dict__)
+            log.error("WebFault. Invalid Session. %s" % err.__dict__)
+            raise ZuoraException("WebFault. Invalid Session. %s"\
+                                % err.__dict__)
         except Exception as error:
             log.error("Zuora: Unexpected Error. %s" % error)
             raise ZuoraException("Zuora: Unexpected Error. %s" % error)
