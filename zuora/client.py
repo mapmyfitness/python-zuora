@@ -78,15 +78,6 @@ class MissingRequired(ZuoraException):
 # main class
 class Zuora:
 
-    #: Soap Service Client
-    client = None
-
-    #: Currency
-    currency = 'USD'
-
-    #: SessionID (TODO: put this into memcache)
-    session_id = None
-
     def __init__(self, zuora_settings):
         """
         Usage example:
@@ -131,6 +122,8 @@ class Zuora:
         # Create the rest client
         self.rest_client = RestClient(zuora_settings)
 
+        self.session_id = None
+
     # Client Create
     def call(self, fn, *args, **kwargs):
         """
@@ -141,14 +134,20 @@ class Zuora:
         """
 
         try:
-            # this is low cost because of the keep alive
-            # an auth failure gives a 500 which closes connection
-            self.login()
+            if self.session_id is None:
+                self.login()
             response = fn(*args, **kwargs)
         except WebFault as err:
-            log.error("WebFault. Invalid Session. %s" % err.__dict__)
-            raise ZuoraException("WebFault. Invalid Session. %s"\
-                                % err.__dict__)
+            if err.fault.faultcode == "fns:INVALID_SESSION":
+                self.login()
+                try:
+                    response = fn(*args, **kwargs)
+                except Exception as error:
+                    log.error("Zuora: Unexpected Error. %s" % error)
+                    raise ZuoraException("Zuora: Unexpected Error. %s" % error)
+            else:
+                log.error("WebFault. Invalid Session. %s" % err.__dict__)
+                raise ZuoraException("WebFault. Invalid Session. %s" % err.__dict__)
         except Exception as error:
             log.error("Zuora: Unexpected Error. %s" % error)
             raise ZuoraException("Zuora: Unexpected Error. %s" % error)
