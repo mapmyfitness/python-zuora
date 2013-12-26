@@ -43,8 +43,11 @@ SOAP_TIMESTAMP = '%Y-%m-%dT%H:%M:%S-06:00'
 from rest_client import RestClient
 
 
-class HttpTransportWithKeepAlive(HttpAuthenticated):
-    s = requests.Session()
+class HttpTransportWithKeepAlive(HttpAuthenticated, object):
+
+    def __init__(self):
+        super(HttpTransportWithKeepAlive, self).__init__()
+        self.s = requests.Session()
 
     def open(self, request):
         self.addcredentials(request)
@@ -53,7 +56,9 @@ class HttpTransportWithKeepAlive(HttpAuthenticated):
     def send(self, request):
         self.addcredentials(request)
         try:
-            req_response = HttpTransportWithKeepAlive.s.post(request.url, data=request.message, headers=request.headers)
+            req_response = self.s.post(request.url, data=request.message, headers=request.headers)
+            if req_response.status_code > 200:
+                log.warning("RESPONSE %s %s", req_response.status_code, req_response.content)
             if req_response.status_code in (202, 204):
                 return None
             else:
