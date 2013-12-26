@@ -58,7 +58,7 @@ class HttpTransportWithKeepAlive(HttpAuthenticated, object):
         try:
             req_response = self.s.post(request.url, data=request.message, headers=request.headers)
             if req_response.status_code > 200:
-                log.warning("RESPONSE %s %s", req_response.status_code, req_response.content)
+                log.debug("RESPONSE %s %s", req_response.status_code, req_response.content)
             if req_response.status_code in (202, 204):
                 return None
             else:
