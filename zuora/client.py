@@ -16,7 +16,7 @@
     z = zuora.Zuora(SETTINGS)
     account = z.get_account(23432)
 """
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from os import path
 import re
 import httplib2
@@ -138,7 +138,7 @@ class Zuora:
         """
 
         for i in range(0, 3):
-            if self.session_id is None or self.session_expiration <= datetime.datetime.now():
+            if self.session_id is None or self.session_expiration <= datetime.now():
                 self.login()
             try:
                 response = fn(*args, **kwargs)
@@ -211,7 +211,7 @@ class Zuora:
         we are currently keeping the session in memory for < 8 hours
         which is the session expiration time of Zuora
         """
-        self.session_expiration = datetime.datetime.now() + datetime.timedelta(hours=7, minutes=55)
+        self.session_expiration = datetime.now() + timedelta(hours=7, minutes=55)
         login_response = self.client.service.login(username=self.username,
                                                    password=self.password)
         self.session_id = login_response.Session
