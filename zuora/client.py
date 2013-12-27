@@ -27,7 +27,7 @@ from suds.sax.element import Element
 from suds.xsd.doctor import Import, ImportDoctor
 from suds.transport.http import HttpAuthenticated, HttpTransport
 from suds.transport import Reply
-
+from suds.sax.text import Text
 
 import logging
 log = logging.getLogger(__name__)
@@ -124,6 +124,10 @@ class Zuora:
 
         self.session_id = None
 
+    def reset_transport(self):
+        self.client.options.transport = HttpTransportWithKeepAlive()
+        self.session_id = None
+
     # Client Create
     def call(self, fn, *args, **kwargs):
         """
@@ -133,24 +137,29 @@ class Zuora:
         :returns: the client response
         """
 
-        try:
-            if self.session_id is None:
+        for i in range(0, 3):
+            if self.session_id is None or self.session_expiration <= datetime.datetime.now():
                 self.login()
-            response = fn(*args, **kwargs)
-        except WebFault as err:
-            if err.fault.faultcode == "fns:INVALID_SESSION":
-                self.login()
-                try:
-                    response = fn(*args, **kwargs)
-                except Exception as error:
-                    log.error("Zuora: Unexpected Error. %s" % error)
-                    raise ZuoraException("Zuora: Unexpected Error. %s" % error)
-            else:
-                log.error("WebFault. Invalid Session. %s" % err.__dict__)
-                raise ZuoraException("WebFault. Invalid Session. %s" % err.__dict__)
-        except Exception as error:
-            log.error("Zuora: Unexpected Error. %s" % error)
-            raise ZuoraException("Zuora: Unexpected Error. %s" % error)
+            try:
+                response = fn(*args, **kwargs)
+                # REMOVE THIS REALLY UNEXPECTED CASE
+                # AFTER WE VALIDATE IT NEVER HAPPENS IN PROD
+                if isinstance(response, Text):
+                    log.error("Zuora: REALLY Unexpected Response!!!! %s, RESETTING TO RETRY", response)
+                    self.reset_transport()
+                else:
+                    log.debug("Zuora: Successful Response %s", response)
+                    break
+            except WebFault as err:
+                if err.fault.faultcode == "fns:INVALID_SESSION":
+                    log.warn("Zuora: Invalid Session, LOGGING IN")
+                    self.session_id = None
+                else:
+                    log.error("WebFault. %s", err.__dict__)
+                    raise ZuoraException("WebFault. %s" % err.__dict__)
+            except Exception as error:
+                log.error("Zuora: Unexpected Error. %s" % error)
+                raise ZuoraException("Zuora: Unexpected Error. %s" % error)
 
         return response
 
@@ -199,8 +208,10 @@ class Zuora:
         Creates the SOAP SessionHeader with the correct session_id from Zuora
 
         TODO: investigate methodology to persist session_id across sessions
-        - look at custom capabilities -- sqlalchemy caching - WEB-935 perhaps
+        we are currently keeping the session in memory for < 8 hours
+        which is the session expiration time of Zuora
         """
+        self.session_expiration = datetime.datetime.now() + datetime.timedelta(hours=7, minutes=55)
         login_response = self.client.service.login(username=self.username,
                                                    password=self.password)
         self.session_id = login_response.Session
