@@ -33,8 +33,8 @@ import logging
 log = logging.getLogger(__name__)
 
 # Tell suds to stop logging and stfu (it logs noise as errors)
-#log_suds = logging.getLogger('suds')
-#log_suds.propagate = False
+log_suds = logging.getLogger('suds')
+log_suds.propagate = False
 
 # Enable these two logging lines if you need to see all the SOAP info
 # PLEASE KEEP THESE COMMENTED OUT IF NOT ACTIVELY USING (EXTREMLY VERBOSE)
