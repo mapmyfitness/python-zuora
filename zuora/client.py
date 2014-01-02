@@ -397,8 +397,10 @@ class Zuora:
                     jsonParams={'cancellationEffectiveDate': effective_date})
         return response
     
-    def create_payment_method(self, baid=None, user_email=None):
+    def create_payment_method(self, baid=None, user_email=None,
+                              account_id=None):
         payment_method = self.client.factory.create('ns2:PaymentMethod')
+        payment_method.AccountId = account_id
         if baid:
             payment_method.PaypalBaid = baid
             # Paypal user e-mail required
