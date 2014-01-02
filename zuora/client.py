@@ -420,14 +420,16 @@ class Zuora:
     def create_active_account(self, zAccount=None, zContact=None,
                               payment_method_id=None, user=None,
                               billing_address=None, shipping_address=None,
-                              site_name=None, prepaid=False):
+                              site_name=None, prepaid=False,
+                              gateway_name=None):
         """
         Create an Active Account for use in Subscribe()
         """
         # Create Account if it doesn't exist
         if not zAccount:
             zAccount = self.make_account(user=user, site_name=site_name,
-                                         billing_address=billing_address)
+                                         billing_address=billing_address,
+                                         gateway_name=gateway_name)
 
         # Create Bill-To Contact on Account
         if not zContact:
@@ -1496,7 +1498,8 @@ class Zuora:
         return zRecords
 
     def make_account(self, user=None, currency='USD', status="Draft",
-		     lazy=False, site_name=None, billing_address=None):
+                     lazy=False, site_name=None, billing_address=None,
+                     gateway_name=None):
         """
         The customer's account. Zuora uses the Account object to track all
         subscriptions, usage, and transactions for a single account to be
@@ -1541,8 +1544,10 @@ class Zuora:
         zAccount.PaymentTerm = 'Due Upon Receipt'
         zAccount.Status = status
 
+        if gateway_name:
+            zAccount.PaymentGateway = gateway_name
         # Determine which Payment Gateway to use, if specified
-        if self.authorize_gateway:
+        elif self.authorize_gateway:
             zAccount.PaymentGateway = self.authorize_gateway
 
         if self.create_test_users:
