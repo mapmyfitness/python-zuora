@@ -36,11 +36,6 @@ log = logging.getLogger(__name__)
 log_suds = logging.getLogger('suds')
 log_suds.propagate = False
 
-# Enable these two logging lines if you need to see all the SOAP info
-# PLEASE KEEP THESE COMMENTED OUT IF NOT ACTIVELY USING (EXTREMLY VERBOSE)
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
-logging.getLogger('suds.transport').setLevel(logging.DEBUG)
-
 SOAP_TIMESTAMP = '%Y-%m-%dT%H:%M:%S-06:00'
 
 
@@ -149,6 +144,8 @@ class Zuora:
                 self.login()
             try:
                 response = fn(*args, **kwargs)
+                log.info("Call sent: %s" % self.client.last_sent())
+                log.info("Call received: %s" % self.client.last_received())
                 # THIS OCCASIONALLY HAPPENS
                 # AND ITS BAD WE NEED TO RESET
                 if isinstance(response, Text):
