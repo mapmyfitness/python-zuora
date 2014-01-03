@@ -454,8 +454,7 @@ class Zuora:
                 'shipping_contact': zShippingContact}
 
     def activate_account(self, zAccount, zContact, zShippingContact=None,
-                         payment_method=None, payment_method_id=None,
-                         prepaid=None):
+                         payment_method_id=None, prepaid=None):
         # Now Update the Draft Account to be Active
         zAccountUpdate = self.client.factory.create('ns2:Account')
         zAccountUpdate.Id = zAccount.Id
@@ -468,8 +467,6 @@ class Zuora:
         # If we don't require a payment method, AutoPay must be False
         if payment_method_id and not prepaid:
             zAccountUpdate.DefaultPaymentMethodId = payment_method_id
-            zAccountUpdate.AutoPay = True
-        elif payment_method:
             zAccountUpdate.AutoPay = True
         else:
             zAccountUpdate.AutoPay = False
@@ -1807,8 +1804,7 @@ class Zuora:
         # Update the account if not active yet, requires BuildToId and SoldToId
         if getattr(zAccount, 'Status') != 'Active':
             self.activate_account(zAccount, zContact,
-                                  zShippingContact=zShippingContact,
-                                  payment_method=payment_method)
+                                  zShippingContact=zShippingContact)
         
         # Get Rate Plan & Build Rate Plan Data
         zRatePlanData = self.make_rate_plan_data(product_rate_plan_id)
