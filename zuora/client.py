@@ -1798,7 +1798,7 @@ class Zuora:
         zRatePlanData = self.make_rate_plan_data(product_rate_plan_id)
 
         if discount_product_rate_plan_id:
-            log.info("make_rate_plan_data executing twice!")
+            log.info("discount_product_rate_plan_id: %s" % discount_product_rate_plan_id)
             zDiscountRatePlanData = self.make_rate_plan_data(discount_product_rate_plan_id)
         else:
             zDiscountRatePlanData = None
