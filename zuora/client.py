@@ -399,23 +399,14 @@ class Zuora:
                     jsonParams={'cancellationEffectiveDate': effective_date})
         return response
     
-    def create_payment_method(self, baid=None, user_email=None,
-                              account_id=None):
+    def create_payment_method(self, baid=None, user_email=None):
         payment_method = self.client.factory.create('ns2:PaymentMethod')
-        payment_method.AccountId = account_id
         if baid:
             payment_method.PaypalBaid = baid
             # Paypal user e-mail required
             payment_method.PaypalEmail = user_email
             payment_method.PaypalType = 'ExpressCheckout'
             payment_method.Type = 'PayPal'
-        
-        # Create Payment Method
-        response = self.create(payment_method)
-        if not isinstance(response, list) or not response[0].Success:
-            raise ZuoraException(
-                "Unknown Error creating Payment Method. %s" % response)
-        payment_method.Id = response[0].Id
 
         return payment_method
 
@@ -1649,7 +1640,6 @@ class Zuora:
 
         # Build Rate Plan
         zRatePlan = self.client.factory.create('ns0:RatePlan')
-        zRatePlan.AmendmentType = "NewProduct"
         zRatePlan.ProductRatePlanId = product_rate_plan_id
 
         # Build Rate Plan Data
@@ -1762,7 +1752,7 @@ class Zuora:
                   user=None, billing_address=None, shipping_address=None,
                   start_date=None, site_name=None,
                   discount_product_rate_plan_id=None,
-                  external_payment_method=None):
+                  external_payment_method=None, gateway_name=None):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
@@ -1783,12 +1773,12 @@ class Zuora:
         :param str subscription_name: The name of the subscription. This is a\
             unique identifier. If not specified, Zuora will auto-create a name.
         """
-        # zAccount = self.client.factory.create('ns2:Account')
         #Used to be called even if account existed, pulling it out for now
         # Get or Create Account
         if not zAccount:
             zAccount = self.make_account(user=user, site_name=site_name,
-                                         billing_address=billing_address)
+                                         billing_address=billing_address,
+                                         gateway_name=gateway_name)
 
         if not zContact and not zAccount.Id:
             # Create Contact
