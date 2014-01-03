@@ -1794,9 +1794,11 @@ class Zuora:
                                          zAccount=zAccount)
 
         # Get Rate Plan & Build Rate Plan Data
+        log.info("make_rate_plan_data executing once!")
         zRatePlanData = self.make_rate_plan_data(product_rate_plan_id)
 
         if discount_product_rate_plan_id:
+            log.info("make_rate_plan_data executing twice!")
             zDiscountRatePlanData = self.make_rate_plan_data(discount_product_rate_plan_id)
         else:
             zDiscountRatePlanData = None
