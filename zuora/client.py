@@ -1540,6 +1540,7 @@ class Zuora:
         # Specify what gateway to use for payments for the user
         if gateway_name:
             zAccount.PaymentGateway = gateway_name
+            
         # Determine which Payment Gateway to use, if specified
         elif self.authorize_gateway:
             zAccount.PaymentGateway = self.authorize_gateway
@@ -1781,7 +1782,7 @@ class Zuora:
                                          billing_address=billing_address,
                                          gateway_name=gateway_name)
 
-        if not zContact and not zAccount.Id:
+        if not zContact:
             # Create Contact
             zContact = self.make_contact(user=user,
                                          billing_address=billing_address,
@@ -1866,6 +1867,9 @@ class Zuora:
         # Add the shipping contact if it exists
         if zShippingContact:
             zSubscribeRequest.SoldToContact = zShippingContact
+        # Otherwise default to the billing contact
+        else:
+            zSubscribeRequest.SoldToContact = zSubscribeRequest.BillToContact
         zSubscribeRequest.SubscriptionData = zSubscriptionData
         zSubscribeRequest.SubscribeOptions = zSubscriptionOptions
 
