@@ -1492,7 +1492,7 @@ class Zuora:
 
     def make_account(self, user=None, currency='USD', status="Draft",
                      lazy=False, site_name=None, billing_address=None,
-                     gateway_name=None):
+                     gateway_name=None, auto_activate=False):
         """
         The customer's account. Zuora uses the Account object to track all
         subscriptions, usage, and transactions for a single account to be
@@ -1535,7 +1535,9 @@ class Zuora:
                             (name_underscore_fix(user["last_name"]),
                              name_underscore_fix(user["first_name"]))
         zAccount.PaymentTerm = 'Due Upon Receipt'
-        zAccount.Status = status
+        # Don't specify a status if you want the account to auto-activate
+        if not auto_activate:
+            zAccount.Status = status
 
         if gateway_name:
             zAccount.PaymentGateway = gateway_name
@@ -1753,7 +1755,8 @@ class Zuora:
                   user=None, billing_address=None, shipping_address=None,
                   start_date=None, site_name=None,
                   discount_product_rate_plan_id=None,
-                  external_payment_method=None, gateway_name=None):
+                  external_payment_method=None, gateway_name=None,
+                  auto_activate=False):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
@@ -1779,7 +1782,8 @@ class Zuora:
         if not zAccount:
             zAccount = self.make_account(user=user, site_name=site_name,
                                          billing_address=billing_address,
-                                         gateway_name=gateway_name)
+                                         gateway_name=gateway_name,
+                                         auto_activate=auto_activate)
 
         if not zContact and not zAccount.Id:
             # Create Contact
