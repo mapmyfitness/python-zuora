@@ -1537,6 +1537,7 @@ class Zuora:
         zAccount.PaymentTerm = 'Due Upon Receipt'
         zAccount.Status = status
 
+        # Specify what gateway to use for payments for the user
         if gateway_name:
             zAccount.PaymentGateway = gateway_name
         # Determine which Payment Gateway to use, if specified
@@ -1641,7 +1642,6 @@ class Zuora:
         # Build Rate Plan
         zRatePlan = self.client.factory.create('ns0:RatePlan')
         zRatePlan.ProductRatePlanId = product_rate_plan_id
-        log.info("zRatePlan:product_rate_plan_id: %s" % product_rate_plan_id)
 
         # Build Rate Plan Data
         zRatePlanData = self.client.factory.create('ns0:RatePlanData')
@@ -1753,8 +1753,7 @@ class Zuora:
                   user=None, billing_address=None, shipping_address=None,
                   start_date=None, site_name=None,
                   discount_product_rate_plan_id=None,
-                  external_payment_method=None, gateway_name=None,
-                  account_status="Draft"):
+                  external_payment_method=None, gateway_name=None):
         """
         The subscribe() call bundles the information required to create one
         or more new subscriptions. This is a combined call that you can use
@@ -1780,8 +1779,7 @@ class Zuora:
         if not zAccount:
             zAccount = self.make_account(user=user, site_name=site_name,
                                          billing_address=billing_address,
-                                         gateway_name=gateway_name,
-                                         status=account_status)
+                                         gateway_name=gateway_name)
 
         if not zContact and not zAccount.Id:
             # Create Contact
@@ -1796,11 +1794,9 @@ class Zuora:
                                          zAccount=zAccount)
 
         # Get Rate Plan & Build Rate Plan Data
-        log.info("make_rate_plan_data executing once!")
         zRatePlanData = self.make_rate_plan_data(product_rate_plan_id)
 
         if discount_product_rate_plan_id:
-            log.info("discount_product_rate_plan_id: %s" % discount_product_rate_plan_id)
             zDiscountRatePlanData = self.make_rate_plan_data(discount_product_rate_plan_id)
         else:
             zDiscountRatePlanData = None
@@ -1857,7 +1853,15 @@ class Zuora:
 
         # Subscribe
         zSubscribeRequest = self.client.factory.create('ns0:SubscribeRequest')
-        zSubscribeRequest.Account = zAccount
+        # If we defined the gateway, the account is created by now
+        # And requires sending only the id of the existing account
+        if gateway_name:
+            # Build Account
+            subscribe_account = self.client.factory.create('ns2:Account')
+            subscribe_account.Id = zAccount.Id
+        else:
+            subscribe_account = zAccount
+        zSubscribeRequest.Account = subscribe_account
         zSubscribeRequest.BillToContact = zContact
         # Add the shipping contact if it exists
         if zShippingContact:
