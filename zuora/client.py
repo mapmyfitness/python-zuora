@@ -1792,6 +1792,7 @@ class Zuora:
                                          billing_address=shipping_address,
                                          zAccount=zAccount)
 
+        log.info("product_rate_plan_id: %s" % product_rate_plan_id)
         # Get Rate Plan & Build Rate Plan Data
         zRatePlanData = self.make_rate_plan_data(product_rate_plan_id)
 
