@@ -1641,6 +1641,7 @@ class Zuora:
         # Build Rate Plan
         zRatePlan = self.client.factory.create('ns0:RatePlan')
         zRatePlan.ProductRatePlanId = product_rate_plan_id
+        log.info("zRatePlan:product_rate_plan_id: %s" % product_rate_plan_id)
 
         # Build Rate Plan Data
         zRatePlanData = self.client.factory.create('ns0:RatePlanData')
@@ -1792,7 +1793,6 @@ class Zuora:
                                          billing_address=shipping_address,
                                          zAccount=zAccount)
 
-        log.info("product_rate_plan_id: %s" % product_rate_plan_id)
         # Get Rate Plan & Build Rate Plan Data
         zRatePlanData = self.make_rate_plan_data(product_rate_plan_id)
 
