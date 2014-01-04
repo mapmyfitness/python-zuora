@@ -1558,8 +1558,10 @@ class Zuora:
 
         if site_name:
             zAccount.User_Site__c = site_name
-
-        if lazy:
+        
+        # If specifying a gateway, the account will be created
+        # during the subscribe call
+        if lazy or gateway_name:
             return zAccount
 
         response = self.create(zAccount)
@@ -1572,7 +1574,7 @@ class Zuora:
         return zAccount
 
     def make_contact(self, user=None, billing_address=None, zAccount=None,
-                     lazy=False):
+                     lazy=False, gateway_name=None):
         """
         This defines the contact (the end user) for the account. There are two
         types of contacts that need to be created as part of the customer
@@ -1625,7 +1627,9 @@ class Zuora:
         if zAccount is not None and hasattr(zAccount, 'Id'):
             zContact.AccountId = zAccount.Id
 
-        if lazy:
+        # If specifying a gateway, the contact will be created
+        # during the subscribe call
+        if lazy or gateway_name:
             return zContact
 
         response = self.create(zContact)
@@ -1793,18 +1797,15 @@ class Zuora:
             # Create Contact
             zContact = self.make_contact(user=user,
                                          billing_address=billing_address,
-                                         zAccount=zAccount)
+                                         zAccount=zAccount,
+                                         gateway_name=gateway_name)
         
         # Add the shipping contact if it exists
         if not zShippingContact and shipping_address:
             zShippingContact = self.make_contact(user=user,
                                          billing_address=shipping_address,
-                                         zAccount=zAccount)
-        
-        # Update the account if not active yet, requires BuildToId and SoldToId
-        if getattr(zAccount, 'Status') != 'Active':
-            self.activate_account(zAccount, zContact,
-                                  zShippingContact=zShippingContact)
+                                         zAccount=zAccount,
+                                         gateway_name=gateway_name)
         
         # Get Rate Plan & Build Rate Plan Data
         zRatePlanData = self.make_rate_plan_data(product_rate_plan_id)
