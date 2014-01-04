@@ -1867,15 +1867,7 @@ class Zuora:
 
         # Subscribe
         zSubscribeRequest = self.client.factory.create('ns0:SubscribeRequest')
-        # If we defined the gateway, the account is created by now
-        # And requires sending only the id of the existing account
-        if gateway_name:
-            # Build Account
-            subscribe_account = self.client.factory.create('ns2:Account')
-            subscribe_account.Id = zAccount.Id
-        else:
-            subscribe_account = zAccount
-        zSubscribeRequest.Account = subscribe_account
+        zSubscribeRequest.Account = zAccount
         zSubscribeRequest.BillToContact = zContact
         # Add the shipping contact if it exists
         if zShippingContact:
