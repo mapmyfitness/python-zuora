@@ -52,7 +52,7 @@ class HttpTransportWithKeepAlive(HttpAuthenticated, object):
         return HttpTransport.open(self, request)
 
     def send(self, request):
-        headers, message = self.http.request(request.url, "POST", body=request.message, headers=request.headers)
+        headers, message = self.http.request(request.url, "POST", body=request.message, headers=request.headers, timeout=1)
         response = Reply(200, headers, message)
         return response
 
@@ -67,6 +67,7 @@ class DoesNotExist(ZuoraException):
     Exception for when objects don't exist in Zuora
     """
     pass
+
 
 class MissingRequired(ZuoraException):
     """
@@ -136,20 +137,21 @@ class Zuora:
 
         :returns: the client response
         """
+        last_error = None
 
         for i in range(0, 3):
             if self.session_id is None or self.session_expiration <= datetime.now():
                 self.login()
             try:
                 response = fn(*args, **kwargs)
-                # REMOVE THIS REALLY UNEXPECTED CASE
-                # AFTER WE VALIDATE IT NEVER HAPPENS IN PROD
+                # THIS OCCASIONALLY HAPPENS
+                # AND ITS BAD WE NEED TO RESET
                 if isinstance(response, Text):
                     log.error("Zuora: REALLY Unexpected Response!!!! %s, RESETTING TO RETRY", response)
                     self.reset_transport()
                 else:
                     log.debug("Zuora: Successful Response %s", response)
-                    break
+                    return response
             except WebFault as err:
                 if err.fault.faultcode == "fns:INVALID_SESSION":
                     log.warn("Zuora: Invalid Session, LOGGING IN")
@@ -159,9 +161,10 @@ class Zuora:
                     raise ZuoraException("WebFault. %s" % err.__dict__)
             except Exception as error:
                 log.error("Zuora: Unexpected Error. %s" % error)
-                raise ZuoraException("Zuora: Unexpected Error. %s" % error)
+                last_error = error
+                self.reset_transport()
 
-        return response
+        raise ZuoraException("Zuora: Unexpected Error. %s" % last_error)
 
     # Client Create
     def create(self, z_object):
