@@ -1934,6 +1934,6 @@ def name_underscore_fix(name_field):
     """
     Make sure the name field has a value, otherwise return an underscore
     """
-    if name_field and name_field != '':
+    if name_field and name_field.strip() != '':
         return name_field
     return '_'
