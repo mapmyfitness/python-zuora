@@ -46,7 +46,7 @@ class HttpTransportWithKeepAlive(HttpAuthenticated, object):
 
     def __init__(self):
         super(HttpTransportWithKeepAlive, self).__init__()
-        self.http = httplib2.Http()
+        self.http = httplib2.Http(timeout=1)
 
     def open(self, request):
         return HttpTransport.open(self, request)
