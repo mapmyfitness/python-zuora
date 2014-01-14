@@ -52,7 +52,9 @@ class HttpTransportWithKeepAlive(HttpAuthenticated, object):
         return HttpTransport.open(self, request)
 
     def send(self, request):
-        headers, message = self.http.request(request.url, "POST", body=request.message, headers=request.headers, timeout=1)
+        headers, message = self.http.request(request.url, "POST",
+                                             body=request.message,
+                                             headers=request.headers)
         response = Reply(200, headers, message)
         return response
 
