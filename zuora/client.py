@@ -478,17 +478,21 @@ class Zuora:
             raise ZuoraException(
                 "Unknown Error updating Account. %s" % response)
 
-    def get_account(self, user_id):
+    def get_account(self, user_id, id_only=False):
         """
         Checks to see if the loaded user has an account
         """
+        if id_only:
+            fields = 'Id'
+        else:
+            fields = """Id, AccountNumber, AutoPay, Balance,
+                        PaymentGateway, Name, Status, UpdatedDate"""
         qs = """
             SELECT
-                Id, AccountNumber, AutoPay, Balance,
-                PaymentGateway, Name, Status, UpdatedDate
+                %s
             FROM Account
             WHERE AccountNumber = '%s' or AccountNumber = 'A-%s'
-            """ % (user_id, user_id)
+            """ % (fields, user_id, user_id)
 
         response = self.query(qs)
         if getattr(response, "records") and len(response.records) > 0:
@@ -1936,9 +1940,7 @@ class Zuora:
         # subscribe request
         log.info("***Existing account: %s" % existing_account)
         if existing_account:
-            sub_account = self.client.factory.create('ns2:Account')
-            sub_account.Id = zAccount.Id
-            zSubscribeRequest.Account = sub_account
+            zSubscribeRequest.Account = self.get_account(user.id, id_only=True)
             log.info("***Subscribe account: %s" % zSubscribeRequest.Account)
         else:
             zSubscribeRequest.Account = zAccount
