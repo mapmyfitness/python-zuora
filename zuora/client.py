@@ -1938,10 +1938,8 @@ class Zuora:
         zSubscribeRequest = self.client.factory.create('ns0:SubscribeRequest')
         # If the account already exists, just add the id to the
         # subscribe request
-        log.info("***Existing account: %s" % existing_account)
         if existing_account:
             zSubscribeRequest.Account = self.get_account(user.id, id_only=True)
-            log.info("***Subscribe account: %s" % zSubscribeRequest.Account)
         else:
             zSubscribeRequest.Account = zAccount
         zSubscribeRequest.BillToContact = zContact
