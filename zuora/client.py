@@ -1504,13 +1504,18 @@ class Zuora:
         return zRecords
 
     def gateway_confirm(self, account, user, gateway_name):
+        """Switches the gateway if the user is purchasing with a different
+           gateway.
+           
+           Returns True or False if the account already exists or not
+        """
         # Make sure the account exists already, otherwise the gateway will be
         # specified on account creation
         if not account or not getattr(account, 'PaymentGateway', None):
             try:
                 zAccount = self.get_account(user.id)
             except DoesNotExist:
-                return
+                return False
         else:
             zAccount = account
         
@@ -1521,14 +1526,14 @@ class Zuora:
             else:
                 update_dict = {'PaymentGateway': self.authorize_gateway}
             self.update_account(zAccount.Id, update_dict)
-            return
+            return True
         
         # If no gateway was specified, and the gateway is set
         # to the default gateway
         if not gateway_name \
             and zAccount.PaymentGateway == self.authorize_gateway:
             # Do nothing
-            return
+            pass
         # If there isn't a gateway specified, and they aren't set to the
         # default gateway
         elif not gateway_name \
@@ -1540,7 +1545,7 @@ class Zuora:
         # set to that gateway
         elif gateway_name and gateway_name == zAccount.PaymentGateway:
             # Do nothing
-            return
+            pass
         # If a gateway was specified, but their account is set to a
         # different gateway
         elif gateway_name and gateway_name != zAccount.PaymentGateway:
@@ -1552,7 +1557,8 @@ class Zuora:
             logging.error(
                 "Unexpected gateway conditions. gateway: %s acct_gateway: %s" \
                 % (gateway_name, zAccount.PaymentGateway))
-            return
+        
+        return True
 
     def make_account(self, user=None, currency='USD', status="Draft",
                      lazy=False, site_name=None, billing_address=None,
@@ -1844,16 +1850,13 @@ class Zuora:
             unique identifier. If not specified, Zuora will auto-create a name.
         """
         # Account Gateway Check/Switch
-        self.gateway_confirm(zAccount, user, gateway_name)
+        existing_account = self.gateway_confirm(zAccount, user, gateway_name)
         
         # Get or Create Account
         if not zAccount:
-            existing_account = False
             zAccount = self.make_account(user=user, site_name=site_name,
                                          billing_address=billing_address,
                                          gateway_name=gateway_name)
-        else:
-            existing_account = True
 
         if not zContact:
             # Create Contact
