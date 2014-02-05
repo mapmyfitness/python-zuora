@@ -483,7 +483,10 @@ class Zuora:
         Checks to see if the loaded user has an account
         """
         qs = """
-            SELECT Id FROM Account
+            SELECT
+                Id, AccountNumber, AutoPay, Balance,
+                PaymentGateway, Name, Status, UpdatedDate
+            FROM Account
             WHERE AccountNumber = '%s' or AccountNumber = 'A-%s'
             """ % (user_id, user_id)
 
@@ -1500,6 +1503,57 @@ class Zuora:
         # Return the Match
         return zRecords
 
+    def gateway_confirm(self, account, user, gateway_name):
+        # Make sure the account exists already, otherwise the gateway will be
+        # specified on account creation
+        if not account or not getattr(account, 'PaymentGateway', None):
+            try:
+                zAccount = self.get_account(user.id)
+            except DoesNotExist:
+                return
+        else:
+            zAccount = account
+        
+        # If the Payment Gateway still isn't specified, set it and change it
+        if not getattr(account, 'PaymentGateway', None):
+            if gateway_name:
+                update_dict = {'PaymentGateway': gateway_name}
+            else:
+                update_dict = {'PaymentGateway': self.authorize_gateway}
+            self.update_account(zAccount.Id, update_dict)
+            return
+        
+        # If no gateway was specified, and the gateway is set
+        # to the default gateway
+        if not gateway_name \
+            and zAccount.PaymentGateway == self.authorize_gateway:
+            # Do nothing
+            return
+        # If there isn't a gateway specified, and they aren't set to the
+        # default gateway
+        elif not gateway_name \
+            and zAccount.PaymentGateway != self.authorize_gateway:
+            # Update the account to the default gateway
+            update_dict = {'PaymentGateway': self.authorize_gateway}
+            self.update_account(zAccount.Id, update_dict)
+        # If a gateway was specified, but their account is already
+        # set to that gateway
+        elif gateway_name and gateway_name == zAccount.PaymentGateway:
+            # Do nothing
+            return
+        # If a gateway was specified, but their account is set to a
+        # different gateway
+        elif gateway_name and gateway_name != zAccount.PaymentGateway:
+            # Update the gateway to the specified gateway
+            update_dict = {'PaymentGateway': gateway_name}
+            self.update_account(zAccount.Id, update_dict)
+        # We should never see this condition
+        else:
+            logging.error(
+                "Unexpected gateway conditions. gateway: %s acct_gateway: %s" \
+                % (gateway_name, zAccount.PaymentGateway))
+            return
+
     def make_account(self, user=None, currency='USD', status="Draft",
                      lazy=False, site_name=None, billing_address=None,
                      gateway_name=None):
@@ -1789,7 +1843,9 @@ class Zuora:
         :param str subscription_name: The name of the subscription. This is a\
             unique identifier. If not specified, Zuora will auto-create a name.
         """
-        #Used to be called even if account existed, pulling it out for now
+        # Account Gateway Check/Switch
+        self.gateway_confirm(zAccount, user, gateway_name)
+        
         # Get or Create Account
         if not zAccount:
             zAccount = self.make_account(user=user, site_name=site_name,
