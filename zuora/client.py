@@ -1931,6 +1931,7 @@ class Zuora:
         zSubscribeRequest = self.client.factory.create('ns0:SubscribeRequest')
         # If the account already exists, just add the id to the
         # subscribe request
+        log.info("***Existing account: %s" % existing_account)
         if existing_account:
             sub_account = self.client.factory.create('ns2:Account')
             sub_account.Id = zAccount.Id
