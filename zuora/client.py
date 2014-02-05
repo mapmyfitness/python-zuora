@@ -1936,7 +1936,10 @@ class Zuora:
         # subscribe request
         log.info("***Existing account: %s" % existing_account)
         if existing_account:
-            zSubscribeRequest.Account.Id = zAccount.Id
+            sub_account = self.client.factory.create('ns2:Account')
+            sub_account.Id = zAccount.Id
+            zSubscribeRequest.Account = sub_account
+            log.info("***Subscribe account: %s" % zSubscribeRequest.Account)
         else:
             zSubscribeRequest.Account = zAccount
         zSubscribeRequest.BillToContact = zContact
