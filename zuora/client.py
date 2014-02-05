@@ -1848,9 +1848,12 @@ class Zuora:
         
         # Get or Create Account
         if not zAccount:
+            existing_account = False
             zAccount = self.make_account(user=user, site_name=site_name,
                                          billing_address=billing_address,
                                          gateway_name=gateway_name)
+        else:
+            existing_account = True
 
         if not zContact:
             # Create Contact
@@ -1926,7 +1929,14 @@ class Zuora:
 
         # Subscribe
         zSubscribeRequest = self.client.factory.create('ns0:SubscribeRequest')
-        zSubscribeRequest.Account = zAccount
+        # If the account already exists, just add the id to the
+        # subscribe request
+        if existing_account:
+            sub_account = self.client.factory.create('ns2:Account')
+            sub_account.Id = zAccount.Id
+            zSubscribeRequest.Account = sub_account
+        else:
+            zSubscribeRequest.Account = zAccount
         zSubscribeRequest.BillToContact = zContact
         # Add the shipping contact if it exists
         if zShippingContact:
