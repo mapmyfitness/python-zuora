@@ -1853,8 +1853,11 @@ class Zuora:
         :param str subscription_name: The name of the subscription. This is a\
             unique identifier. If not specified, Zuora will auto-create a name.
         """
-        # Account Gateway Check/Switch
-        existing_account = self.gateway_confirm(zAccount, user, gateway_name)
+        if user:
+            # Account Gateway Check/Switch
+            existing_account = self.gateway_confirm(zAccount, user, gateway_name)
+        else:
+            existing_account = False
         
         # Get or Create Account
         if not zAccount:
