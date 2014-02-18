@@ -44,9 +44,14 @@ from rest_client import RestClient
 
 class HttpTransportWithKeepAlive(HttpAuthenticated, object):
 
-    def __init__(self):
+    def __init__(self, use_cert=False):
         super(HttpTransportWithKeepAlive, self).__init__()
-        self.http = httplib2.Http(timeout=20,
+        if use_cert:
+            cert_file = 'file://%s' % path.abspath(
+                path.dirname(__file__) + "/PCA-3G5.pem")
+            self.http = httplib2.Http(timeout=20, ca_certs=cert_file)
+        else:
+            self.http = httplib2.Http(timeout=20,
                                   disable_ssl_certificate_validation=True)
 
     def open(self, request):
@@ -107,6 +112,7 @@ class Zuora:
         self.base_dir = path.dirname(__file__)
         self.authorize_gateway = zuora_settings.get("gateway_name", None)
         self.create_test_users = zuora_settings.get("test_users", None)
+        self.use_cert = zuora_settings.get("SSL", False)
 
         # Build Client
         imp = Import('http://object.api.zuora.com/')
@@ -117,8 +123,11 @@ class Zuora:
         wsdl_file = 'file://%s' % path.abspath(
                                     self.base_dir + "/" + self.wsdl_file)
 
-        self.client = Client(url=wsdl_file, doctor=schema_doctor,
-                             cache=None, transport=HttpTransportWithKeepAlive())
+        self.client = Client(
+                        url=wsdl_file,
+                        doctor=schema_doctor,
+                        cache=None,
+                        transport=HttpTransportWithKeepAlive(self.use_cert))
 
         # Force No Cache
         self.client.set_options(cache=None)
@@ -129,7 +138,8 @@ class Zuora:
         self.session_id = None
 
     def reset_transport(self):
-        self.client.options.transport = HttpTransportWithKeepAlive()
+        self.client.options.transport = HttpTransportWithKeepAlive(
+                                                                self.use_cert)
         self.session_id = None
 
     # Client Create
