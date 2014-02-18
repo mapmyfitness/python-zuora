@@ -1519,16 +1519,22 @@ class Zuora:
             try:
                 zAccount = self.get_account(user.id)
             except DoesNotExist:
+                logging.info("Gateway: Account DNE. user: %s" % (user.id))
                 return False
+            logging.info("Gateway: Fetched Account. user: %s" % (user.id))
         else:
+            logging.info(
+                "Gateway: Account and Gateway existed. user: %s" % (user.id))
             zAccount = account
         
         # If the Payment Gateway still isn't specified, set it and change it
-        if not getattr(account, 'PaymentGateway', None):
+        if not getattr(zAccount, 'PaymentGateway', None):
             if gateway_name:
                 update_dict = {'PaymentGateway': gateway_name}
             else:
                 update_dict = {'PaymentGateway': self.authorize_gateway}
+            logging.info("Gateway: switched user: %s update: %s" \
+                         % (user.id, update_dict))
             self.update_account(zAccount.Id, update_dict)
             return True
         
@@ -1537,6 +1543,8 @@ class Zuora:
         if not gateway_name \
             and zAccount.PaymentGateway == self.authorize_gateway:
             # Do nothing
+            logging.info("Gateway: same default gateway user: %s gateway: %s" \
+                         % (user.id, zAccount.PaymentGateway))
             pass
         # If there isn't a gateway specified, and they aren't set to the
         # default gateway
@@ -1545,10 +1553,15 @@ class Zuora:
             # Update the account to the default gateway
             update_dict = {'PaymentGateway': self.authorize_gateway}
             self.update_account(zAccount.Id, update_dict)
+            logging.info("Gateway: switched to default user: %s gateway: %s" \
+                         % (user.id, update_dict))
         # If a gateway was specified, but their account is already
         # set to that gateway
         elif gateway_name and gateway_name == zAccount.PaymentGateway:
             # Do nothing
+            logging.info(
+                    "Gateway: same specified gateway user: %s gateway: %s" \
+                         % (user.id, gateway_name))
             pass
         # If a gateway was specified, but their account is set to a
         # different gateway
@@ -1556,6 +1569,9 @@ class Zuora:
             # Update the gateway to the specified gateway
             update_dict = {'PaymentGateway': gateway_name}
             self.update_account(zAccount.Id, update_dict)
+            logging.info(
+                "Gateway: switched to specified gateway user: %s gateway: %s" \
+                         % (user.id, update_dict))
         # We should never see this condition
         else:
             logging.error(
@@ -1854,8 +1870,11 @@ class Zuora:
             unique identifier. If not specified, Zuora will auto-create a name.
         """
         if user:
+            logging.error("Gateway: confirming gateway user: %s" % (user.id))
             # Account Gateway Check/Switch
-            existing_account = self.gateway_confirm(zAccount, user, gateway_name)
+            existing_account = self.gateway_confirm(zAccount,
+                                                    user,
+                                                    gateway_name)
         else:
             existing_account = False
         
@@ -1943,6 +1962,7 @@ class Zuora:
         # subscribe request
         if existing_account:
             zSubscribeRequest.Account = self.get_account(user.id, id_only=True)
+            logging.error("Fetched just the account id, user: %s" % (user.id))
         else:
             zSubscribeRequest.Account = zAccount
         zSubscribeRequest.BillToContact = zContact
