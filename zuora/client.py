@@ -1556,7 +1556,7 @@ class Zuora:
                                         self.authorize_gateway,
                                         payment_method)
             logging.info("Gateway: switched to default user: %s gateway: %s" \
-                         % (user.id, update_dict))
+                         % (user.id, self.authorize_gateway))
         # If a gateway was specified, but their account is already
         # set to that gateway
         elif gateway_name and gateway_name == zAccount.PaymentGateway:
@@ -1574,7 +1574,7 @@ class Zuora:
                                         payment_method)
             logging.info(
                 "Gateway: switched to specified gateway user: %s gateway: %s" \
-                         % (user.id, update_dict))
+                         % (user.id, gateway_name))
         # We should never see this condition
         else:
             logging.error(
