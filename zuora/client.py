@@ -1584,26 +1584,36 @@ class Zuora:
         return True
     
     def update_account_payment(self, account_id, gateway, payment_method):
+        # These steps cannot be combined, and have to be executed in this order
+        # Update the account gateway
+        logging.info(
+            "Gateway: Updating Account Gateway. Account id: %s" % account_id)
+        gateway_dict = {'PaymentGateway': gateway}
+        self.update_account(account_id, gateway_dict)
         # If the payment method hasn't been created yet
         if payment_method and getattr(payment_method, 'Id', None) is None:
             payment_method.AccountId = account_id
             logging.info(
-                "Creating Payment Method. Account id: %s" % account_id)
+                "Gateway: Creating Payment Method. Account: %s" % account_id)
             response = self.create(payment_method)
             if not isinstance(response, list) or not response[0].Success:
                 raise ZuoraException(
                     "Error creating Payment Method. Account id: %s resp: %s" \
                     % (account_id, response))
             payment_method_id = response[0].Id
+        # No Payment Method specified
         elif payment_method is None:
             raise ZuoraException(
                 "Missing Payment Method. Account id: %s" % account_id)
+        # Payment Method exists already
         else:
             payment_method_id = payment_method.Id
-        # Update the account fields
-        update_dict = {'PaymentGateway': gateway,
-                       'DefaultPaymentMethodId': payment_method_id}
-        self.update_account(account_id, update_dict)
+        logging.info(
+            "Gateway: Updating DefaultPayment Method. Account id: %s" \
+            % account_id)
+        # Update the default payment method on the account
+        dpm_dict = {'DefaultPaymentMethodId': payment_method_id}
+        self.update_account(account_id, dpm_dict)
 
     def make_account(self, user=None, currency='USD', status="Draft",
                      lazy=False, site_name=None, billing_address=None,
