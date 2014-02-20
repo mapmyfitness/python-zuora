@@ -1586,6 +1586,7 @@ class Zuora:
     def update_account_payment(self, account_id, gateway, payment_method):
         # If the payment method hasn't been created yet
         if payment_method and getattr(payment_method, 'Id', None) is None:
+            payment_method.AccountId = account_id
             logging.info(
                 "Creating Payment Method. Account id: %s" % account_id)
             response = self.create(payment_method)
