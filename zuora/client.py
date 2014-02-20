@@ -1507,7 +1507,8 @@ class Zuora:
         # Return the Match
         return zRecords
 
-    def gateway_confirm(self, account, user, gateway_name):
+    def gateway_confirm(self, account, user, gateway_name,
+                        payment_method):
         """Switches the gateway if the user is purchasing with a different
            gateway.
            
@@ -1551,8 +1552,9 @@ class Zuora:
         elif not gateway_name \
             and zAccount.PaymentGateway != self.authorize_gateway:
             # Update the account to the default gateway
-            update_dict = {'PaymentGateway': self.authorize_gateway}
-            self.update_account(zAccount.Id, update_dict)
+            self.update_account_payment(zAccount.Id,
+                                        self.authorize_gateway,
+                                        payment_method)
             logging.info("Gateway: switched to default user: %s gateway: %s" \
                          % (user.id, update_dict))
         # If a gateway was specified, but their account is already
@@ -1567,8 +1569,9 @@ class Zuora:
         # different gateway
         elif gateway_name and gateway_name != zAccount.PaymentGateway:
             # Update the gateway to the specified gateway
-            update_dict = {'PaymentGateway': gateway_name}
-            self.update_account(zAccount.Id, update_dict)
+            self.update_account_payment(zAccount.Id,
+                                        gateway_name,
+                                        payment_method)
             logging.info(
                 "Gateway: switched to specified gateway user: %s gateway: %s" \
                          % (user.id, update_dict))
@@ -1579,6 +1582,27 @@ class Zuora:
                 % (gateway_name, zAccount.PaymentGateway))
         
         return True
+    
+    def update_account_payment(self, account_id, gateway, payment_method):
+        # If the payment method hasn't been created yet
+        if payment_method and getattr(payment_method, 'Id', None) is None:
+            logging.info(
+                "Creating Payment Method. Account id: %s" % account_id)
+            response = self.create(payment_method)
+            if not isinstance(response, list) or not response[0].Success:
+                raise ZuoraException(
+                    "Error creating Payment Method. Account id: %s resp: %s" \
+                    % (account_id, response))
+            payment_method_id = response[0].Id
+        elif payment_method is None:
+            raise ZuoraException(
+                "Missing Payment Method. Account id: %s" % account_id)
+        else:
+            payment_method_id = payment_method.Id
+        # Update the account fields
+        update_dict = {'PaymentGateway': gateway,
+                       'DefaultPaymentMethodId': payment_method_id}
+        self.update_account(account_id, update_dict)
 
     def make_account(self, user=None, currency='USD', status="Draft",
                      lazy=False, site_name=None, billing_address=None,
@@ -1871,10 +1895,17 @@ class Zuora:
         """
         if user:
             logging.error("Gateway: confirming gateway user: %s" % (user.id))
+            # Get the payment method
+            if external_payment_method:
+                gateway_pm = external_payment_method
+            else:
+                gateway_pm = payment_method
             # Account Gateway Check/Switch
-            existing_account = self.gateway_confirm(zAccount,
-                                                    user,
-                                                    gateway_name)
+            existing_account = self.gateway_confirm(
+                            zAccount,
+                            user,
+                            gateway_name,
+                            gateway_pm)
         else:
             existing_account = False
         
