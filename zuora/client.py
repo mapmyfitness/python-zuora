@@ -44,12 +44,24 @@ from rest_client import RestClient
 
 class HttpTransportWithKeepAlive(HttpAuthenticated, object):
 
-    def __init__(self, use_cert=False):
+    def __init__(self, use_cert=False, cert_domain=None):
         super(HttpTransportWithKeepAlive, self).__init__()
         if use_cert:
-            cert_file = 'file://%s' % path.abspath(
-                path.dirname(__file__) + "/PCA-3G5.pem")
-            self.http = httplib2.Http(timeout=20, ca_certs=cert_file)
+            import socket
+            import ssl
+
+            path_to_certs = path.abspath(path.dirname(__file__))
+            cert_file = path_to_certs + "/PCA-3G5.pem"
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            
+            # require a certificate from the server
+            ssl_sock = ssl.wrap_socket(s,
+                                       ca_certs=cert_file,
+                                       cert_reqs=ssl.CERT_REQUIRED)
+            
+            ssl_sock.connect((cert_domain, 443))
+            print "***cert_file, ", cert_file
+            self.http = httplib2.Http(timeout=20)
         else:
             self.http = httplib2.Http(timeout=20,
                                   disable_ssl_certificate_validation=True)
@@ -113,6 +125,7 @@ class Zuora:
         self.authorize_gateway = zuora_settings.get("gateway_name", None)
         self.create_test_users = zuora_settings.get("test_users", None)
         self.use_cert = zuora_settings.get("SSL", False)
+        self.cert_domain = zuora_settings.get("SSL_domain")
 
         # Build Client
         imp = Import('http://object.api.zuora.com/')
@@ -127,7 +140,8 @@ class Zuora:
                         url=wsdl_file,
                         doctor=schema_doctor,
                         cache=None,
-                        transport=HttpTransportWithKeepAlive(self.use_cert))
+                        transport=HttpTransportWithKeepAlive(self.use_cert,
+                                                             self.cert_domain))
 
         # Force No Cache
         self.client.set_options(cache=None)
@@ -139,7 +153,8 @@ class Zuora:
 
     def reset_transport(self):
         self.client.options.transport = HttpTransportWithKeepAlive(
-                                                                self.use_cert)
+                                                            self.use_cert,
+                                                            self.cert_domain)
         self.session_id = None
 
     # Client Create
