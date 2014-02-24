@@ -110,8 +110,7 @@ class Zuora:
         self.password = zuora_settings["password"]
         self.wsdl_file = zuora_settings["wsdl_file"]
         self.base_dir = path.dirname(__file__)
-        self.authorize_gateway = zuora_settings.get("gateway_name",
-                                                    'Use Default Gateway')
+        self.authorize_gateway = zuora_settings.get("gateway_name")
         self.create_test_users = zuora_settings.get("test_users", None)
         self.use_cert = zuora_settings.get("SSL", False)
 
