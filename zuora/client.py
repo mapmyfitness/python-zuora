@@ -1403,7 +1403,7 @@ class Zuora:
             price = pricing_dict[charge_model][charge_type]
             for rpct in rpc["rate_charge_tiers"]:
                 is_overage_price = rpct["is_overage_price"]
-                if is_overage_price == False:
+                if is_overage_price in [False, 'False']:
                     price = price + float(rpct["price"])
 
             pricing_dict[charge_model][charge_type] = price
