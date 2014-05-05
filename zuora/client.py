@@ -488,21 +488,30 @@ class Zuora:
             raise ZuoraException(
                 "Unknown Error updating Account. %s" % response)
 
-    def get_account(self, user_id, id_only=False):
+    def get_account(self, user_id, account_id=None, id_only=False):
         """
         Checks to see if the loaded user has an account
         """
         if id_only:
             fields = 'Id'
         else:
-            fields = """Id, AccountNumber, AutoPay, Balance,
+            fields = """Id, AccountNumber, AutoPay, Balance, DefaultPaymentMethodId,
                         PaymentGateway, Name, Status, UpdatedDate"""
-        qs = """
-            SELECT
-                %s
-            FROM Account
-            WHERE AccountNumber = '%s' or AccountNumber = 'A-%s'
-            """ % (fields, user_id, user_id)
+        # If no account id was specified
+        if not account_id:
+            qs = """
+                SELECT
+                    %s
+                FROM Account
+                WHERE AccountNumber = '%s' or AccountNumber = 'A-%s'
+                """ % (fields, user_id, user_id)
+        else:
+            qs = """
+                SELECT
+                    %s
+                FROM Account
+                WHERE Id = '%s'
+                """ % (fields, account_id)
 
         response = self.query(qs)
         if getattr(response, "records") and len(response.records) > 0:
@@ -591,7 +600,8 @@ class Zuora:
             raise DoesNotExist("Unable to find Invoice for Id %s"\
                             % invoice_id)
 
-    def get_invoices(self, account_id=None):
+    def get_invoices(self, account_id=None, minimum_balance=None,
+                     status=None):
         """
         Gets the Invoices matching criteria.
 
@@ -603,6 +613,10 @@ class Zuora:
 
         if account_id:
             qs_filter.append("AccountId = '%s'" % account_id)
+        if minimum_balance:
+            qs_filter.append("Balance > '%s'" % minimum_balance)
+        if status:
+            qs_filter.append("Status = '%s'" % status)
 
         if qs_filter:
             qs = """
@@ -1768,6 +1782,34 @@ class Zuora:
 
         # Return
         return zContact
+
+    def make_payment(self, account_id, invoice_id, invoice_amount,
+                     payment_method_id, payment_type='External',
+                     payment_status='Processed', effective_date=None):
+        if not effective_date:
+            effective_date = date.today().strftime(SOAP_TIMESTAMP)
+        else:
+            effective_date = effective_date.strftime(SOAP_TIMESTAMP)
+        # Create the Payment
+        zPayment = self.client.factory.create('ns2:Payment')
+        zPayment.AccountId = account_id
+        zPayment.InvoiceId = invoice_id
+        zPayment.AppliedInvoiceAmount = invoice_amount
+        zPayment.PaymentMethodId = payment_method_id
+        zPayment.Type = payment_type
+        zPayment.Status = payment_status
+        zPayment.EffectiveDate = effective_date
+        
+        response = self.create(zPayment)
+        # If the Payment creation failed
+        if not isinstance(response, list) or not response[0].Success:
+            logging.error("Error creating Payment, account: %s response: %s" \
+                          % (account_id, response))
+        else:
+            zPayment.Id = response[0].Id
+
+        # Return
+        return zPayment
 
     def make_rate_plan_data(self, product_rate_plan_id):
         """
