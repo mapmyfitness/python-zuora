@@ -481,6 +481,9 @@ class Zuora:
         if payment_method_id and not prepaid:
             zAccountUpdate.DefaultPaymentMethodId = payment_method_id
             zAccountUpdate.AutoPay = True
+        elif payment_method_id:
+            zAccountUpdate.DefaultPaymentMethodId = payment_method_id
+            zAccountUpdate.AutoPay = False
         else:
             zAccountUpdate.AutoPay = False
         response = self.update(zAccountUpdate)
@@ -1530,6 +1533,16 @@ class Zuora:
 
         # Return the Match
         return zRecords
+    
+    def set_default_payment_method_id(self, account_id, payment_method_id,
+                                      auto_pay=None):
+        # Update the default payment method on the account
+        account_dict = {'DefaultPaymentMethodId': payment_method_id}
+        if auto_pay == True:
+            account_dict['AutoPay'] = True
+        elif auto_pay == False:
+            account_dict['AutoPay'] = False
+        self.update_account(account_id, account_dict)
 
     def gateway_confirm(self, account, user, gateway_name,
                         payment_method):
@@ -1785,7 +1798,8 @@ class Zuora:
 
     def make_payment(self, account_id, invoice_id, invoice_amount,
                      payment_method_id, payment_type='External',
-                     payment_status='Processed', effective_date=None):
+                     payment_status='Processed', effective_date=None,
+                     dry_run=False):
         if not effective_date:
             effective_date = date.today().strftime(SOAP_TIMESTAMP)
         else:
@@ -1800,13 +1814,20 @@ class Zuora:
         zPayment.Status = payment_status
         zPayment.EffectiveDate = effective_date
         
-        response = self.create(zPayment)
-        # If the Payment creation failed
-        if not isinstance(response, list) or not response[0].Success:
-            logging.error("Error creating Payment, account: %s response: %s" \
-                          % (account_id, response))
+        # If it's not a dry run, create the payment
+        if not dry_run:
+            response = self.create(zPayment)
+            # If the Payment creation failed
+            if not isinstance(response, list) or not response[0].Success:
+                logging.error("Error creating Payment, account: %s response: %s" \
+                              % (account_id, response))
+            else:
+                zPayment.Id = response[0].Id
+                logging.info("Made Payment. Payment: %s Account: %s" % (
+                                zPayment.Id, account_id))
+        # else, just output the dry run of the payment data
         else:
-            zPayment.Id = response[0].Id
+            logging.info("Dry run Payment. account: %s Payment: %s" % (account_id, zPayment))
 
         # Return
         return zPayment
