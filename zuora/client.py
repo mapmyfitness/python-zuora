@@ -1702,6 +1702,9 @@ class Zuora:
         # Specify what gateway to use for payments for the user
         if gateway_name:
             zAccount.PaymentGateway = gateway_name
+            # If it's paypal. Set AutoPay to True
+            if 'paypal' in gateway_name.lower():
+                zAccount.AutoPay = True
             
         # Determine which Payment Gateway to use, if specified
         elif self.authorize_gateway:
