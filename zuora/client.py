@@ -1565,6 +1565,10 @@ class Zuora:
                 "Gateway: Account and Gateway existed. user: %s" % (user.id))
             zAccount = account
         
+        # If the gateway is paypal, make sure AutoPay is set to True
+        if gateway_name and 'paypal' in gateway_name.lower():
+            self.update_account(zAccount.Id, {'AutoPay': True})
+        
         # If the Payment Gateway still isn't specified, set it and change it
         if not getattr(zAccount, 'PaymentGateway', None):
             if gateway_name:
@@ -1981,7 +1985,7 @@ class Zuora:
             unique identifier. If not specified, Zuora will auto-create a name.
         """
         if user:
-            logging.error("Gateway: confirming gateway user: %s" % (user.id))
+            logging.info("Gateway: confirming gateway user: %s" % (user.id))
             # Get the payment method
             if external_payment_method:
                 gateway_pm = external_payment_method
