@@ -1565,10 +1565,6 @@ class Zuora:
                 "Gateway: Account and Gateway existed. user: %s" % (user.id))
             zAccount = account
         
-        # If the gateway is paypal, make sure AutoPay is set to True
-        if gateway_name and 'paypal' in gateway_name.lower():
-            self.update_account(zAccount.Id, {'AutoPay': True})
-        
         # If the Payment Gateway still isn't specified, set it and change it
         if not getattr(zAccount, 'PaymentGateway', None):
             if gateway_name:
@@ -1706,9 +1702,6 @@ class Zuora:
         # Specify what gateway to use for payments for the user
         if gateway_name:
             zAccount.PaymentGateway = gateway_name
-            # If it's paypal. Set AutoPay to True
-            if 'paypal' in gateway_name.lower():
-                zAccount.AutoPay = True
             
         # Determine which Payment Gateway to use, if specified
         elif self.authorize_gateway:
@@ -2111,6 +2104,10 @@ class Zuora:
         log.info("***Subscribe Request: %s" % zSubscribeRequest)
         response = self.call(fn, zSubscribeRequest)
         log.info("***Subscribe Response: %s" % response)
+        
+        # If the gateway is paypal, make sure AutoPay is set to True
+        if gateway_name and 'paypal' in gateway_name.lower():
+            self.update_account(zAccount.Id, {'AutoPay': True})
 
         # return the response
         return response
