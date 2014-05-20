@@ -2077,7 +2077,7 @@ class Zuora:
         # subscribe request
         if existing_account:
             zSubscribeRequest.Account = self.get_account(user.id, id_only=True)
-            logging.error("Fetched just the account id, user: %s" % (user.id))
+            logging.info("Fetched just the account id, user: %s" % (user.id))
         else:
             zSubscribeRequest.Account = zAccount
         zSubscribeRequest.BillToContact = zContact
@@ -2107,7 +2107,7 @@ class Zuora:
         
         # If the gateway is paypal, make sure AutoPay is set to True
         if gateway_name and 'paypal' in gateway_name.lower():
-            self.update_account(zAccount.Id, {'AutoPay': True})
+            self.update_account(zSubscribeRequest.Account.Id, {'AutoPay': True})
 
         # return the response
         return response
