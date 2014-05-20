@@ -2107,7 +2107,11 @@ class Zuora:
         
         # If the gateway is paypal, make sure AutoPay is set to True
         if gateway_name and 'paypal' in gateway_name.lower():
-            self.update_account(zSubscribeRequest.Account.Id, {'AutoPay': True})
+            if isinstance(response, list):
+                SubscribeResponse = response[0]
+            else:
+                SubscribeResponse = response
+            self.update_account(SubscribeResponse.AccountId, {'AutoPay': True})
 
         # return the response
         return response
