@@ -16,13 +16,15 @@ class SubscriptionManager(RequestBase):
         data = {'pageSize': pageSize}
     
         response = requests.get(fullUrl, params=data,
-                                headers=self.zuora_config.headers)
+                                headers=self.zuora_config.headers,
+                                verify=False)
         return self.get_json(response)
 
     @rest_client_reconnect
     def get_subscriptions_by_key(self, subsKey):
         fullUrl = self.zuora_config.base_url + 'subscriptions/' + subsKey
-        response = requests.get(fullUrl, headers=self.zuora_config.headers)
+        response = requests.get(fullUrl, headers=self.zuora_config.headers,
+                                verify=False)
         return self.get_json(response)
     
     @rest_client_reconnect
@@ -32,7 +34,9 @@ class SubscriptionManager(RequestBase):
                   '/renew'
         data = json.dumps(jsonParams)
         response = requests.put(fullUrl, data=data,
-                                headers=self.zuora_config.headers)
+                                headers=self.zuora_config.headers,
+                                verify=False
+        )
         return self.get_json(response)
     
     @rest_client_reconnect
@@ -44,7 +48,8 @@ class SubscriptionManager(RequestBase):
         data = json.dumps(jsonParams)
         log.info("Zuora REST: Canceling subscription: %s" % subsKey)
         response = requests.put(fullUrl, data=data,
-                                headers=self.zuora_config.headers)
+                                headers=self.zuora_config.headers,
+                                verify=False)
         return self.get_json(response)
     
     @rest_client_reconnect
@@ -52,7 +57,8 @@ class SubscriptionManager(RequestBase):
         fullUrl = self.zuora_config.base_url + 'subscriptions/preview'
         data = json.dumps(jsonParams)
         response = requests.post(fullUrl, data=data,
-                                 headers=self.zuora_config.headers)
+                                 headers=self.zuora_config.headers,
+                                 verify=False)
         return self.get_json(response)
     
     @rest_client_reconnect
@@ -60,7 +66,8 @@ class SubscriptionManager(RequestBase):
         fullUrl = self.zuora_config.base_url + 'subscriptions'
         data = json.dumps(jsonParams)
         response = requests.post(fullUrl, data=data,
-                                 headers=self.zuora_config.headers)
+                                 headers=self.zuora_config.headers,
+                                 verify=False)
         return self.get_json(response)
     
     @rest_client_reconnect
@@ -68,6 +75,7 @@ class SubscriptionManager(RequestBase):
         fullUrl = self.zuora_config.base_url + 'subscriptions/' + subsKey
         data = json.dumps(jsonParams)
         response = requests.put(fullUrl, data=data,
-                                headers=self.zuora_config.headers)
+                                headers=self.zuora_config.headers,
+                                verify=False)
         return self.get_json(response)
         

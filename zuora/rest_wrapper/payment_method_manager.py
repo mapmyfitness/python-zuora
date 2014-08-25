@@ -18,7 +18,8 @@ class PaymentMethodManager(RequestBase):
         data = json.dumps(kwargs)
     
         response = requests.post(fullUrl, data=data,
-                                 headers=self.zuora_config.headers)
+                                 headers=self.zuora_config.headers,
+                                 verify=False)
         return self.get_json(response)
     
     @rest_client_reconnect
@@ -28,7 +29,8 @@ class PaymentMethodManager(RequestBase):
         data = {'pageSize': pageSize}
     
         response = requests.get(fullUrl, params=data,
-                                headers=self.zuora_config.headers)
+                                headers=self.zuora_config.headers,
+                                verify=False)
         return self.get_json(response)
     
     @rest_client_reconnect
@@ -44,7 +46,9 @@ class PaymentMethodManager(RequestBase):
             return None
     
         response = requests.put(fullUrl, data=data,
-                                headers=self.zuora_config.headers)
+                                headers=self.zuora_config.headers,
+                                verify=False
+        )
         return self.get_json(response)
     
     @rest_client_reconnect
@@ -52,5 +56,6 @@ class PaymentMethodManager(RequestBase):
         fullUrl = self.zuora_config.base_url + 'payment-methods/' + \
                   paymentMethodId
     
-        response = requests.delete(fullUrl, headers=self.zuora_config.headers)
+        response = requests.delete(fullUrl, headers=self.zuora_config.headers,
+                                   verify=False)
         return self.get_json(response)
