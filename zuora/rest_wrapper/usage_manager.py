@@ -10,5 +10,6 @@ class UsageManager(RequestBase):
                   accountKey
         params = {'pageSize': pageSize}
         response = requests.get(fullUrl, params=params,
-                                headers=self.zuora_config.headers)
+                                headers=self.zuora_config.headers,
+                                verify=False)
         return self.get_json(response)
